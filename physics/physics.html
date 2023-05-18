@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body {
+            background-color: #777;
+        }
+
+        #screen {
+            width: 600px;
+            height: 600px;
+            background-color: violet;
+            border: solid 4px #fff;
+            position: relative;
+            margin: 0 auto;
+            overflow: hidden;
+        }
+
+        .circle {
+            position: absolute;
+            border-radius: 50%;
+            background-color: slateblue;
+            box-sizing: border-box;
+            border: solid 1px #fff;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="screen"></div>
+    <script>
+        window.onload = () => {
+            const circles = [];
+            const screen = document.getElementById("screen");
+            const W = 600;
+            const H = 600;
+
+            function createCircle(x, y) {
+                let circle = {};
+                circle.body = document.createElement("div");
+                circle.body.classList.add("circle");
+                circle.body.style.backgroundColor = `rgb(${Math.random() * 255},${Math.random() * 255},${Math.random() * 255})`;
+                screen.append(circle.body);
+                circle.x = x;
+                circle.y = y;
+                circle.radius = 0;
+                circle.tradius = 20 + Math.floor(Math.random() * 40);
+                circle.id = t;
+                circles.push(circle);
+            }
+
+            var t = 0;
+            function mainloop() {
+                t++;
+
+                for (let circle of circles) {
+                    if (circle.tradius > circle.radius) {
+                        circle.radius += 3;
+                    }
+
+                    //if (circle.y < 600) circle.y++;
+
+                    circle.body.style.left = (circle.x - circle.radius / 2) + "px";
+                    circle.body.style.top = (circle.y - circle.radius / 2) + "px";
+                    circle.body.style.width = circle.radius + "px";
+                    circle.body.style.height = circle.radius + "px";
+
+                    for (let acircle of circles) {
+                        if (circle.id == acircle.id) continue;
+                        let totalr = (circle.radius + acircle.radius) / 2;
+                        let dist = Math.sqrt((circle.x - acircle.x) ** 2 + (circle.y - acircle.y) ** 2) - totalr;
+                        if (dist < 0) {
+                            circle.x = circle.x + (circle.x - acircle.x) / totalr;
+                            circle.y = circle.y + (circle.y - acircle.y) / totalr;
+                            acircle.x = acircle.x + (acircle.x - circle.x) / totalr;
+                            acircle.y = acircle.y + (acircle.y - circle.y) / totalr;
+                        }
+                    }
+                }
+
+                if (t % 50 == 0) {
+                    createCircle(Math.round(Math.random() * W), Math.round(Math.random() * H));
+                }
+
+                requestAnimationFrame(mainloop);
+
+            }
+
+            screen.onclick = (e) => {
+                createCircle(e.offsetX, e.offsetY);
+            }
+
+            requestAnimationFrame(mainloop);
+        }
+    </script>
+</body>
+
+</html>

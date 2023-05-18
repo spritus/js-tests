@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="three.min.js"></script>
+    <style>
+        body {
+            background-color: darkgray;
+            text-align: center;
+        }
+
+        #screen {
+            width: 900px;
+            height: 600px;
+            border: solid 4px #fff;
+            margin: 20px auto;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="screen"></div>
+</body>
+<script>
+    const screen = document.getElementById("screen");
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, screen.offsetWidth / screen.offsetHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer();
+    renderer.setSize(screen.offsetWidth, screen.offsetHeight);
+    screen.appendChild(renderer.domElement);
+
+    const material = new THREE.MeshBasicMaterial();
+    const geom = new THREE.BoxGeometry();
+    const cube = new THREE.Mesh(geom, material);
+    scene.add(cube);
+
+    camera.position.z = 5;
+    cube.position.z = 3;
+
+    /*const textureFlare = new THREE.TextureLoader().load("lensflare.png");
+    const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: textureFlare, sizeAttenuation: false }));
+    scene.add(sprite);*/
+
+    const canvasElm = document.createElement("canvas");
+    canvasElm.setAttribute("width", "250");
+    canvasElm.setAttribute("height", "250");
+
+    const canvas = canvasElm.getContext("2d");
+
+    material.map = new THREE.CanvasTexture(canvasElm);
+
+    let t = 0;
+    function animate() {
+        requestAnimationFrame(animate);
+        t += 0.01;
+        for (let y = 0; y < 250; y += 5)
+            for (let x = 0; x < 250; x += 5) {
+                let col = Math.round(Math.random() * 250);
+                canvas.fillStyle = "rgb(" + col + "," + col + "," + col + ")";
+                canvas.fillRect(x, y, x + 5, y + 5);
+            }
+        material.map.needsUpdate = true;
+        cube.rotation.x += 0.01;
+        cube.rotation.y += 0.01;
+        renderer.render(scene, camera);
+    }
+    animate();
+</script>
+
+</html>

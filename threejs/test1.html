@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="three.min.js"></script>
+    <style>
+        body {
+            background-color: darkgray;
+            text-align: center;
+        }
+
+        #screen {
+            width: 900px;
+            height: 600px;
+            border: solid 4px #fff;
+            margin: 20px auto;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="screen"></div>
+</body>
+<script>
+    const screen = document.getElementById("screen");
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, screen.offsetWidth / screen.offsetHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer();
+    renderer.setSize(screen.offsetWidth, screen.offsetHeight);
+    screen.appendChild(renderer.domElement);
+
+    const cube = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshPhongMaterial());
+    scene.add(cube);
+
+    const ball = new THREE.Mesh(new THREE.SphereGeometry(0.1), new THREE.MeshBasicMaterial({ color: 0xffff00 }));
+    //scene.add(ball);
+
+    camera.position.z = 5;
+    cube.position.z = -1;
+
+    const pointLightY = new THREE.PointLight(0xffff00, 1, 100);
+    pointLightY.position.set(1, 1, 1);
+    scene.add(pointLightY);
+
+    const textureFlare = new THREE.TextureLoader().load("lensflare.png");
+    const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: textureFlare, sizeAttenuation: false }));
+    //sprite.scale.set(3, 3, 1);
+    scene.add(sprite);
+    /*const lensFlare = new THREE.LensFlare();
+    lensFlare.addElement(new THREE.LensFlareElement(textureFlare, 512, 0));
+    pointLightY.add(lensFlare);*/
+
+    const pointLightB = new THREE.PointLight(0x555555, 1, 100);
+    pointLightB.position.set(1, 1, 1);
+    //scene.add(pointLightB);
+
+    cube.rotation.x += 1;
+    cube.rotation.y += 1;
+
+    let t = 0;
+    function animate() {
+        requestAnimationFrame(animate);
+        t += 0.01;
+        sprite.position.x = pointLightY.position.x = 3 * Math.cos(t);
+        //sprite.position.y = pointLightY.position.y = 2 * Math.sin(t);
+        sprite.position.z = pointLightY.position.z = 3 * Math.sin(t);
+        cube.rotation.x += 0.01;
+        sprite.material.rotation += 0.01;
+        //cube.rotation.y += 0.01;
+        renderer.render(scene, camera);
+        //if (cube.position.z < 2) cube.position.z += 0.01;
+    }
+    animate();
+</script>
+
+</html>

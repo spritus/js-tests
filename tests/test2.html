@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <script>
+        function newElm(html = "<div>") {
+            let tmp = document.createElement("template");
+            tmp.innerHTML = html.trim();
+            let elm = tmp.content.firstElementChild;
+
+            function feat(el) {
+                el.css = function (css) {
+                    for (c in css) {
+                        el.style[c] = css[c];
+                    }
+                    return el;
+                }
+
+                el.attr = function (attr) {
+                    for (a in attr) {
+                        el.setAttribute(a, attr[a]);
+                    }
+                    return el;
+                }
+
+                el.addTo = function (target) {
+                    target.append(this);
+                    return el;
+                }
+
+                return el;
+            }
+
+            elm.querySelectorAll("[id]").forEach((e) => {
+                elm[e.id] = feat(e);
+            });
+
+            return feat(elm);
+        }
+
+        let ul = newElm(/* html */`
+            <div>
+                <ul id="list">
+                    <li>1. madde</li>
+                    <li>2. madde</li>
+                    <li>3. madde</li>
+                </ul>
+                <button id="btn">Ok</button>
+            </div>`
+        ).css({ backgroundColor: "red" }).addTo(document.body);
+
+        ul.list.append(newElm("<li>4. madde</li>"));
+        ul.btn.css({ backgroundColor: "blue", color: "white" }).onclick = () => {
+            alert("ok");
+        }
+
+    </script>
+</body>
+
+</html>

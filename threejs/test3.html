@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="three.min.js"></script>
+    <style>
+        body {
+            background-color: darkgray;
+            text-align: center;
+        }
+
+        #screen {
+            width: 900px;
+            height: 600px;
+            border: solid 4px #fff;
+            margin: 20px auto;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="screen"></div>
+</body>
+<script>
+    const screen = document.getElementById("screen");
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, screen.offsetWidth / screen.offsetHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer();
+    renderer.setSize(screen.offsetWidth, screen.offsetHeight);
+    screen.appendChild(renderer.domElement);
+
+    const material = new THREE.MeshBasicMaterial({ color: "#ff0000" });
+    const geom = new THREE.BoxGeometry();
+    const cube = new THREE.Mesh(geom, material);
+    scene.add(cube);
+
+    camera.position.z = 5;
+    cube.position.z = 1;
+
+    const myStar = star("ffaaff", 20, 100, 400, 2);
+    const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(myStar) }));
+    scene.add(sprite);
+
+    function star(col, root, ring, pow, thorn) {
+        const canvasElm = document.createElement("canvas");
+        const CS = 1000;
+
+        canvasElm.setAttribute("width", "500");
+        canvasElm.setAttribute("height", "500");
+
+        const canvas = canvasElm.getContext("2d");
+        const img = canvas.createImageData(CS, CS);
+
+        function pixel(x, y, r, g, b, a) {
+            img.data[(x + y * CS) * 4] = r;
+            img.data[(x + y * CS) * 4 + 1] = g;
+            img.data[(x + y * CS) * 4 + 2] = b;
+            img.data[(x + y * CS) * 4 + 3] = a;
+        }
+
+        let r = parseInt(col.slice(0, 2), 16);
+        let g = parseInt(col.slice(2, 4), 16);
+        let b = parseInt(col.slice(4, 6), 16);
+
+        const R = CS / 2;
+        for (let i = 0; i < R; i++)
+            for (let j = 0; j < R; j++) {
+                let nx = (i - R / 2) / (R / 2);
+                let ny = (j - R / 2) / (R / 2);
+                let nz = 1 - Math.sqrt(nx * nx + ny * ny);
+                if (nz > 0) {
+                    let a = (nz * 255 > ring && nz * 255 < ring + 5 ? nz * 200 : 0) + nz * nz * pow;
+                    pixel(i, j, r, g, b, a);
+                }
+            }
+
+        for (let n = 0; n < 250; n++) {
+            for (let t = 0; t < 5; t++) {
+                let alp = n * 1.2;
+                if (thorn > 0) {
+                    pixel(248 + t, n, 255, 255, 255, alp);
+                    pixel(248 + t, 500 - n, 255, 255, 255, alp);
+                    pixel(n, 250 + t, 255, 255, 255, alp);
+                    pixel(500 - n, 250 + t, 255, 255, 255, alp);
+                }
+                alp = n * 2;
+                if (n < 150 && thorn > 1) {
+                    pixel(100 + t + n, 104 + n, 255, 255, 255, alp);
+                    pixel(t + (400 - n), 100 + n, 255, 255, 255, alp);
+                    pixel(100 + n, t + (400 - n), 255, 255, 255, alp);
+                    pixel(400 - n, t + (400 - n), 255, 255, 255, alp);
+                }
+            }
+        }
+
+        canvas.putImageData(img, 0, 0);
+
+        for (let n = 0; n < 5; n++) {
+            canvas.fillStyle = "rgba(255,255,255," + (n == 0 ? "1" : "0.3") + ")";
+            canvas.arc(250, 252, root + n * 2, 0, 360);
+            canvas.fill();
+        }
+
+        document.body.append(canvasElm);
+
+        return canvasElm;
+    }
+
+    let t = 0;
+    function animate() {
+        requestAnimationFrame(animate);
+        t += 0.01;
+        cube.rotation.x += 0.01;
+        cube.rotation.y += 0.01;
+        sprite.position.x = 3 * Math.cos(t);
+        sprite.position.z = 3 * Math.sin(t);
+        renderer.render(scene, camera);
+    }
+    animate();
+</script>
+
+</html>

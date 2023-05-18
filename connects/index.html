@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body {
+            background-color: #777;
+            text-align: center;
+            font-family: Verdana, Geneva, Tahoma, sans-serif;
+            font-size: 8px;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        #screen {
+            position: relative;
+            overflow: auto;
+            width: 800px;
+            height: 600px;
+            background-color: #999;
+            border: solid 5px #fff;
+            margin: 0 auto;
+        }
+
+        #btnNew {
+            margin-top: 10px;
+        }
+
+        .box {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            box-sizing: border-box;
+            background-color: #ccc;
+            border: solid 2px #ddd;
+            border-radius: 5px;
+            z-index: 1;
+        }
+
+        .box .delBtn {
+            position: absolute;
+            display: none;
+            width: 10px;
+            height: 10px;
+            box-sizing: border-box;
+            background-color: #EA575A;
+            color: #fff;
+            top: -3px;
+            right: -3px;
+            border-radius: 2px;
+            cursor: pointer;
+        }
+
+        .box:hover .delBtn {
+            display: block;
+        }
+
+        .conPoint {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background-color: tan;
+            left: calc(50% - 3px);
+            top: calc(50% - 3px);
+            cursor: pointer;
+            box-sizing: border-box;
+        }
+
+        .lamb {
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            background-color: #000;
+            border: solid 1px #fff;
+            border-radius: 50%;
+            left: calc(50% - 7px);
+            bottom: -7px;
+            box-sizing: border-box;
+        }
+
+        .switch {
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            background-color: #aaa;
+            border: solid 1px #fff;
+            border-radius: 10%;
+            left: calc(50% - 7px);
+            bottom: -7px;
+            box-sizing: border-box;
+            cursor: pointer;
+        }
+
+        .pole {
+            position: absolute;
+            width: 10px;
+            height: 3px;
+            background-color: #eee;
+            border-radius: 10%;
+            left: calc(50% - 5px);
+            top: -5px;
+            box-sizing: border-box;
+        }
+
+        .lineUp {
+            position: absolute;
+            box-sizing: border-box;
+            border-bottom: solid 5px #ddd;
+            border-left: solid 5px #ddd;
+        }
+
+        .lup {
+            border-image: url(./cable1.svg) 33 round;
+        }
+
+        .lineDn {
+            position: absolute;
+            box-sizing: border-box;
+            border-bottom: solid 5px #ddd;
+            border-right: solid 5px #ddd;
+        }
+
+        .ldn {
+            border-image: url(./cable2.svg) 33 round;
+        }
+
+        .conPoint:hover,
+        .active {
+            border: solid 1px yellow;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="screen"></div>
+    <select id="selType">
+        <option value="hub">Dağıtıcı</option>
+        <option value="battery">Pil</option>
+        <option value="lamb">Lamba</option>
+        <option value="switch">Anahtar</option>
+        <option value="autoswitch">Otomatik Anahtar</option>
+    </select>
+    <button id="btnNew">Ekle</button>
+    <script>
+        Cls = [];
+        window.onload = () => {
+            const screen = document.getElementById("screen");
+            const btnNew = document.getElementById("btnNew");
+            const selType = document.getElementById("selType");
+
+            var z = 0;
+            var conObj = null;
+
+            screen.ondragstart = () => false;
+
+            function poke(obj) {
+                if (obj.name != "battery")
+                    obj.energy = obj.sources.some(src => src.energy && src.status);
+
+                if (obj.lamb && obj.energy)
+                    obj.lamb.style.backgroundColor = "lightgreen";
+                else if (obj.lamb)
+                    obj.lamb.style.backgroundColor = "#000";
+
+                obj.targets.forEach(o => poke(o.obj));
+            }
+
+            function updateLine(line, source, target) {
+                let lst = {
+                    left: ((target.x < source.x ? target.x : source.x) + 20) + "px",
+                    top: ((target.y < source.y ? target.y : source.y) + 25) + "px",
+                    width: Math.abs(target.x - source.x) + 4 + "px",
+                    height: Math.abs(target.y - source.y) + "px"
+                };
+                line.className = "";
+                Object.assign(line.style, lst);
+                if (target.y - source.y < 0 && target.x - source.x >= 0 || target.y - source.y >= 0 && target.x - source.x < 0)
+                    line.classList.add("lineDn");
+                else
+                    line.classList.add("lineUp");
+
+                if (source.x > target.x)
+                    line.classList.add("ldn");
+                else
+                    line.classList.add("lup");
+            }
+
+            Cls["hub"] = function (x, y) {
+                this.name = "hub";
+                this.x = x;
+                this.y = y;
+                this.targets = [];
+                this.sources = [];
+                this.status = true;
+                this.energy = false;
+                this.body = document.createElement("div");
+                this.body.classList.add("box");
+                this.body.style.left = this.x + "px";
+                this.body.style.top = this.y + "px";
+                screen.append(this.body);
+
+                this.conPoint = document.createElement("div");
+                this.conPoint.classList.add("conPoint");
+                this.body.append(this.conPoint);
+
+                this.delBtn = document.createElement("div");
+                this.delBtn.classList.add("delBtn");
+                this.delBtn.innerHTML = "X";
+                this.body.append(this.delBtn);
+                this.delBtn.onclick = () => {
+                    if (confirm("Silinsin mi?")) {
+                        that.targets.forEach(t => {
+                            t.obj.sources = t.obj.sources.filter(s => s != that);
+                            t.line.remove();
+                            poke(t.obj);
+                        });
+
+                        that.sources.forEach(s => {
+                            s.targets = s.targets.filter(t => {
+                                if (t.obj == that) t.line.remove();
+                                return t.obj != that;
+                            });
+                        });
+
+                        that.body.remove();
+                        delete that;
+                    }
+                };
+
+                let that = this;
+
+                this.conPoint.onclick = () => {
+                    if (conObj == null) {
+                        that.conPoint.classList.add("active");
+                        conObj = that;
+                    }
+                    else if (that == conObj) {
+                        conObj = null;
+                        that.conPoint.classList.remove("active");
+                    }
+                    else if (!that.targets.some(o => o.obj == conObj) && !conObj.targets.some(o => o.obj == that)) {
+                        let line = document.createElement("div");
+                        updateLine(line, conObj, that);
+                        screen.append(line);
+                        conObj.targets.push({ obj: that, line: line });
+                        that.sources.push(conObj);
+                        poke(conObj);
+                        conObj.conPoint.classList.remove("active");
+                        conObj = null;
+                    }
+                }
+
+                that.body.onmousedown = (event) => {
+                    let shiftX = event.clientX - that.body.getBoundingClientRect().left + 5;
+                    let shiftY = event.clientY - that.body.getBoundingClientRect().top + 5;
+                    that.body.style.zIndex = ++z;
+                    function moveAt(pageX, pageY) {
+                        that.x = pageX - shiftX;
+                        that.x = that.x > screen.offsetWidth - 50 ? screen.offsetWidth - 50 : that.x;
+                        that.x = that.x < 0 ? 0 : that.x;
+                        //that.x = that.x - (that.x % 10);
+                        that.y = pageY - shiftY;
+                        that.y = that.y > screen.offsetHeight - 50 ? screen.offsetHeight - 50 : that.y;
+                        that.y = that.y < 0 ? 0 : that.y;
+                        //that.y = that.y - (that.y % 10);
+                        that.body.style.left = that.x + 'px';
+                        that.body.style.top = that.y + 'px';
+                        for (let target of that.targets) {
+                            updateLine(target.line, that, target.obj);
+                        }
+                        for (let source of that.sources) {
+                            let target = source.targets.find(o => o.obj == that);
+                            updateLine(target.line, source, that);
+                        }
+                    }
+
+                    moveAt(event.pageX - screen.offsetLeft, event.pageY - screen.offsetTop);
+
+                    function onMouseMove(e) {
+                        moveAt(e.pageX - screen.offsetLeft, e.pageY - screen.offsetTop);
+                    }
+
+                    screen.addEventListener('mousemove', onMouseMove);
+
+                    that.body.onmouseup = function () {
+                        screen.removeEventListener('mousemove', onMouseMove);
+                        that.body.onmouseup = null;
+                    };
+                }
+            }
+
+            Cls["battery"] = class extends Cls["hub"] {
+                constructor(x, y) {
+                    super(x, y);
+                    this.name = "battery";
+                    this.body.style.background = "linear-gradient(0deg, rgba(2, 0, 36, 1) 69%, rgba(210, 149, 23, 1) 70%)";
+                    let pole = document.createElement("div");
+                    pole.classList.add("pole");
+                    this.body.append(pole);
+                    this.energy = true;
+                }
+            }
+
+            Cls["lamb"] = class extends Cls["hub"] {
+                constructor(x, y) {
+                    super(x, y);
+                    this.name = "lamb";
+                    this.body.style.backgroundColor = "#858D2C";
+                    this.lamb = document.createElement("div");
+                    this.lamb.classList.add("lamb");
+                    this.body.append(this.lamb);
+                }
+            }
+
+            Cls["switch"] = class extends Cls["hub"] {
+                constructor(x, y) {
+                    super(x, y);
+                    this.name = "switch";
+                    this.body.style.backgroundColor = "#888";
+                    this.status = false;
+                    this.switch = document.createElement("div");
+                    this.switch.classList.add("switch");
+                    this.switch.onclick = () => {
+                        this.status = !this.status;
+                        this.switch.style.height = this.status ? "12px" : "15px";
+                        this.switch.style.borderColor = this.status ? "lightgreen" : "#fff";
+                        poke(this);
+                    }
+                    this.body.append(this.switch);
+
+                }
+            }
+
+            Cls["autoswitch"] = class extends Cls["hub"] {
+                constructor(x, y) {
+                    super(x, y);
+                    this.name = "switch";
+                    this.body.style.backgroundColor = "purple";
+                    this.status = false;
+                    this.switch = document.createElement("div");
+                    this.switch.classList.add("switch");
+                    setInterval(() => {
+                        if (!this.energy) return;
+                        this.status = !this.status;
+                        this.switch.style.height = this.status ? "12px" : "15px";
+                        this.switch.style.borderColor = this.status ? "lightgreen" : "#fff";
+                        poke(this);
+                    }, 1000);
+                    this.body.append(this.switch);
+
+                }
+            }
+
+            btnNew.onclick = () => {
+                new Cls[selType.value](10, 10);
+            }
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="\bootstrap.min.css">
+    <title>Document</title>
+</head>
+
+<body class="bg-dark d-flex justify-content-center">
+    <script>
+        function newElm(html = "<div>") {
+            let tmp = document.createElement("template");
+            tmp.innerHTML = html.trim();
+            let elm = tmp.content.firstElementChild;
+
+            function feat(el) {
+                el.css = function (css) {
+                    for (c in css) {
+                        el.style[c] = css[c];
+                    }
+                    return el;
+                }
+
+                el.attr = function (attr) {
+                    for (a in attr) {
+                        el.setAttribute(a, attr[a]);
+                    }
+                    return el;
+                }
+
+                el.addTo = function (target) {
+                    if (target) {
+                        target.append(this);
+                        this.parent = target;
+                    }
+                    return el;
+                }
+
+                el.text = function (txt) {
+                    if (txt) el.innerText = txt;
+                    return el.innerText;
+                }
+
+                el.html = function (html) {
+                    if (txt) el.innerHTML = html;
+                    return el.innerHTML;
+                }
+
+                let that = el.querySelector("[val]") || el;
+                el.val = function (v) {
+                    if (v) that.value = v;
+                    return that.value;
+                }
+
+                return el;
+            }
+
+            elm.querySelectorAll("[id]").forEach((e) => {
+                elm[e.id] = feat(e);
+                elm[e.id].parent = elm;
+            });
+
+            return feat(elm);
+        }
+
+        let card = newElm(/* html*/`
+            <div class="card w-100 m-1" style="max-width:600px">
+                <div class="card-header fw-bold" id="head">Personel Maaşları</div>
+                <div class="card-body" id="body"></div>
+                <div class="card-footer fst-italic" id="footer">Test uygulaması</div>
+            </div>
+        `).addTo(document.body);
+
+        function inputBox(label) {
+            return newElm(/* html*/`
+                <div class="input-group mb-1">
+                    <span class="input-group-text w-25" id="label">${label}</span>
+                    <input type="text" class="form-control" val>
+                    <button  id="btn" class="btn btn-success btn-md ms-auto">...</button>
+                </div>
+            `);
+        }
+
+        const adSoyad = inputBox("Ad Soyad:").addTo(card.body);
+        const departman = inputBox("Departman:").addTo(card.body);
+        const maas = inputBox("Maaş:").addTo(card.body);
+
+        adSoyad.label.text("İsim:");
+
+        console.log(adSoyad.label.text());
+
+        const btnKaydet = newElm(/* html */`
+            <div class="input-group mb-1">
+                <button id="btn" class="btn btn-success btn-md ms-auto">Kaydet</button>
+            </div>
+        `).addTo(card.body);
+
+        btnKaydet.btn.onclick = () => {
+            //alert();
+            console.log(adSoyad.val("15"));
+        }
+
+        adSoyad.btn.onclick = function () {
+            alert(this.parent.val());
+        }
+
+        departman.btn.remove();
+
+        //btnKaydet.remove();
+
+    </script>
+</body>
+
+</html>
