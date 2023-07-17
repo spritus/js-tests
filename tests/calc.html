@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body {
+            font-family: Verdana, Geneva, Tahoma, sans-serif;
+            font-size: 11pt;
+            user-select: none;
+        }
+
+        .colrow {
+            position: absolute;
+            background-color: #bbb;
+            border: outset 2px;
+            height: 25px;
+            box-sizing: border-box;
+            font-size: 10pt;
+            color: #555;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+        }
+
+        .column {
+            width: 150px;
+        }
+
+        .row {
+            width: 25px;
+        }
+
+        .cell {
+            width: 150px;
+            background-color: #fff;
+            border: none;
+            border-right: solid 1px #ddd;
+            border-bottom: solid 1px #ddd;
+            text-align: left;
+        }
+
+        .cell:focus {
+            border: solid 2px #ccc;
+            outline: none;
+        }
+    </style>
+</head>
+
+<body>
+
+</body>
+<script>
+    var cells = [];
+    for (let n = 0; n < 8; n++) {
+        let column = document.createElement("div");
+        column.classList.add("colrow", "column");
+        column.innerText = String.fromCharCode(65 + n);
+        column.style.left = (30 + n * 150) + "px";
+        document.body.append(column);
+    }
+
+    for (let n = 0; n < 30; n++) {
+        let column = document.createElement("div");
+        column.classList.add("colrow", "row");
+        column.innerText = n + 1;
+        column.style.top = (30 + n * 25) + "px";
+        document.body.append(column);
+    }
+
+    for (let col = 0; col < 8; col++) {
+        cells[col] = [];
+        for (let row = 0; row < 30; row++) {
+            let cell = document.createElement("input");
+            cell.classList.add("colrow", "cell");
+            cell.style.left = (30 + col * 150) + "px";
+            cell.style.top = (30 + row * 25) + "px";
+            document.body.append(cell);
+            cell.row = row;
+            cell.col = col;
+            cell.onkeyup = (e) => {
+                if (e.key == "Enter") {
+                    if (row < 29) {
+                        cells[col][row + 1].focus();
+                    }
+                    else if (col < 7) {
+                        cells[col + 1][0].focus();
+                    }
+                    else {
+                        cells[0][0].focus();
+                    }
+                }
+
+                if (e.key == "ArrowUp" && row > 0) {
+                    cells[col][row - 1].focus();
+                }
+
+                if (e.key == "ArrowDown" && row < 29) {
+                    cells[col][row + 1].focus();
+                }
+
+                if (e.key == "ArrowLeft" && col > 0) {
+                    cells[col - 1][row].focus();
+                }
+
+                if (e.key == "ArrowRight" && col < 7) {
+                    cells[col + 1][row].focus();
+                }
+            };
+            cells[col][row] = cell;
+        }
+    }
+</script>
+
+</html>
