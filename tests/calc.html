@@ -55,22 +55,27 @@
 </body>
 <script>
     var cells = [];
+    var columns = [];
     for (let n = 0; n < 8; n++) {
         let column = document.createElement("div");
         column.classList.add("colrow", "column");
         column.innerText = String.fromCharCode(65 + n);
         column.style.left = (30 + n * 150) + "px";
         document.body.append(column);
+        columns[n] = column;
 
         column.onclick = function () {
-            let colw = 30 + (this.offsetWidth + 20) % 150;
-            this.style.width = colw + "px";
+            let colw = (this.offsetWidth + 20) % 150;
+            this.style.width = (30 + colw) + "px";
             for (let cell of cells[n]) {
-                cell.style.width = colw + "px";
+                cell.style.width = (30 + colw) + "px";
             }
-            for (let cn = n + 1; cn < 7; cn++)
+            for (let c in columns) {
+                if (c > n) columns[c].style.left = columns[c].offsetLeft + "px";
+            }
+            for (let cn = n + 1; cn <= 7; cn++)
                 for (let cell of cells[cn]) {
-                    cell.style.left = (cell.offsetLeft) + "px";
+                    cell.style.left = (cn * 150 - (90 - colw)) + "px";
                 }
         }
     }
