@@ -61,6 +61,18 @@
         column.innerText = String.fromCharCode(65 + n);
         column.style.left = (30 + n * 150) + "px";
         document.body.append(column);
+
+        column.onclick = function () {
+            let colw = 30 + (this.offsetWidth + 20) % 150;
+            this.style.width = colw + "px";
+            for (let cell of cells[n]) {
+                cell.style.width = colw + "px";
+            }
+            for (let cn = n + 1; cn < 7; cn++)
+                for (let cell of cells[cn]) {
+                    cell.style.left = (cell.offsetLeft) + "px";
+                }
+        }
     }
 
     for (let n = 0; n < 30; n++) {
@@ -110,6 +122,14 @@
                     cells[col + 1][row].focus();
                 }
             };
+            cell.onblur = function () {
+                if (this.value.trim() == "" || isNaN(this.value)) {
+                    this.style.textAlign = "";
+                }
+                else {
+                    this.style.textAlign = "right";
+                }
+            }
             cells[col][row] = cell;
         }
     }
