@@ -152,7 +152,7 @@
                             let v = cells[x.substr(1) - 1][x.charCodeAt() - 65];
                             tcell.affecteds.add(v);
                             v.effects.add(tcell);
-                            return isNaN(v.value) ? `"${v.value}"` : Number(v.value);
+                            return isNaN(v.value) ? `"${v.value}"` : `(${v.value})`;
                         }));
                     }
                     if (tcell.value.trim() == "" || isNaN(tcell.value)) {
