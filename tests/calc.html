@@ -12,8 +12,12 @@
             user-select: none;
         }
 
+        #main {
+            width: 1230px;
+            overflow: auto;
+        }
+
         .colrow {
-            position: absolute;
             background-color: #bbb;
             border: outset 2px;
             height: 25px;
@@ -23,7 +27,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-
+            float: left;
         }
 
         .column {
@@ -51,60 +55,59 @@
 </head>
 
 <body>
-
+    <div id="main"></div>
 </body>
 <script>
     var cells = [];
     var columns = [];
+    var main = document.getElementById("main");
+
+    let row = document.createElement("div");
+    row.classList.add("colrow", "row");
+    row.style.top = "30px";
+    main.append(row);
+
     for (let n = 0; n < 8; n++) {
         let column = document.createElement("div");
         column.classList.add("colrow", "column");
         column.innerText = String.fromCharCode(65 + n);
-        column.style.left = (30 + n * 150) + "px";
-        document.body.append(column);
+        if (n == 7) column.style.float = "none";
+        main.append(column);
         columns[n] = column;
 
         column.onclick = function () {
-            let colw = (this.offsetWidth + 20) % 150;
-            this.style.width = (30 + colw) + "px";
-            for (let cell of cells[n]) {
-                cell.style.width = (30 + colw) + "px";
+            let colw = 30 + (this.offsetWidth + 20) % 150;
+            this.style.width = colw + "px";
+            for (let cell of cells) {
+                cell[n].style.width = colw + "px";
             }
-            for (let c in columns) {
-                if (c > n) columns[c].style.left = columns[c].offsetLeft + "px";
-            }
-            for (let cn = n + 1; cn <= 7; cn++)
-                for (let cell of cells[cn]) {
-                    cell.style.left = (cn * 150 - (90 - colw)) + "px";
-                }
         }
     }
 
-    for (let n = 0; n < 30; n++) {
-        let column = document.createElement("div");
-        column.classList.add("colrow", "row");
-        column.innerText = n + 1;
-        column.style.top = (30 + n * 25) + "px";
-        document.body.append(column);
-    }
-
-    for (let col = 0; col < 8; col++) {
-        cells[col] = [];
-        for (let row = 0; row < 30; row++) {
+    for (let row = 0; row < 30; row++) {
+        cells[row] = [];
+        for (let col = 0; col < 8; col++) {
+            if (col == 0) {
+                let frow = document.createElement("div");
+                frow.classList.add("colrow", "row");
+                frow.innerText = row + 1;
+                frow.style.clear = "left";
+                main.append(frow);
+            }
             let cell = document.createElement("input");
             cell.classList.add("colrow", "cell");
-            cell.style.left = (30 + col * 150) + "px";
-            cell.style.top = (30 + row * 25) + "px";
-            document.body.append(cell);
+            main.append(cell);
             cell.row = row;
             cell.col = col;
+            cell.effects = new Set();
+            cell.affecteds = new Set();
             cell.onkeyup = (e) => {
                 if (e.key == "Enter") {
                     if (row < 29) {
-                        cells[col][row + 1].focus();
+                        cells[row + 1][col].focus();
                     }
                     else if (col < 7) {
-                        cells[col + 1][0].focus();
+                        cells[0][col + 1].focus();
                     }
                     else {
                         cells[0][0].focus();
@@ -112,30 +115,59 @@
                 }
 
                 if (e.key == "ArrowUp" && row > 0) {
-                    cells[col][row - 1].focus();
+                    cells[row - 1][col].focus();
                 }
 
                 if (e.key == "ArrowDown" && row < 29) {
-                    cells[col][row + 1].focus();
+                    cells[row + 1][col].focus();
                 }
 
                 if (e.key == "ArrowLeft" && col > 0) {
-                    cells[col - 1][row].focus();
+                    cells[row][col - 1].focus();
                 }
 
                 if (e.key == "ArrowRight" && col < 7) {
-                    cells[col + 1][row].focus();
+                    cells[row][col + 1].focus();
                 }
             };
-            cell.onblur = function () {
-                if (this.value.trim() == "" || isNaN(this.value)) {
+
+            cell.onfocus = function () {
+                if (this.formula) {
+                    this.value = this.formula;
                     this.style.textAlign = "";
                 }
-                else {
-                    this.style.textAlign = "right";
+                edit = this.value;
+            };
+
+            cell.onblur = function () {
+                function update(tcell, root) {
+                    //tcell.affecteds.clear();
+                    for (let cl of tcell.effects) {
+                        //cl.affecteds.delete(tcell);
+                    }
+                    if (!root && tcell.formula || tcell.value[0] == "=" && tcell.value.trim().length > 1) {
+                        if (root) tcell.formula = tcell.value;
+                        else tcell.value = tcell.formula;
+                        tcell.value = eval(tcell.value.substr(1).toUpperCase().replaceAll(/\b([A-Z])(\d{1,2})\b/g, (x) => {
+                            let v = cells[x.substr(1) - 1][x.charCodeAt() - 65];
+                            tcell.affecteds.add(v);
+                            v.effects.add(tcell);
+                            return isNaN(v.value) ? `"${v.value}"` : Number(v.value);
+                        }));
+                    }
+                    if (tcell.value.trim() == "" || isNaN(tcell.value)) {
+                        tcell.style.textAlign = "";
+                    }
+                    else {
+                        tcell.style.textAlign = "right";
+                    }
+                    for (let cl of tcell.effects) {
+                        update(cl, false);
+                    }
                 }
-            }
-            cells[col][row] = cell;
+                update(this, true);
+            };
+            cells[row][col] = cell;
         }
     }
 </script>
