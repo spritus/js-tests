@@ -141,10 +141,14 @@
 
             cell.onblur = function () {
                 function update(tcell, root) {
-                    //tcell.affecteds.clear();
-                    for (let cl of tcell.effects) {
-                        //cl.affecteds.delete(tcell);
+                    if (root) {
+                        for (let cl of tcell.affecteds) {
+                            cl.effects.delete(tcell);
+                        }
+                        tcell.affecteds.clear();
+                        tcell.formula = "";
                     }
+
                     if (!root && tcell.formula || tcell.value[0] == "=" && tcell.value.trim().length > 1) {
                         if (root) tcell.formula = tcell.value;
                         else tcell.value = tcell.formula;
@@ -152,7 +156,7 @@
                             let v = cells[x.substr(1) - 1][x.charCodeAt() - 65];
                             tcell.affecteds.add(v);
                             v.effects.add(tcell);
-                            return isNaN(v.value) ? `"${v.value}"` : `(${v.value})`;
+                            return isNaN(v.value) ? `"${v.value}"` : `(${Number(v.value)})`;
                         }));
                     }
                     if (tcell.value.trim() == "" || isNaN(tcell.value)) {
