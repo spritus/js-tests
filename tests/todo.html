@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+
+</body>
+<script>
+    let inpTodo = document.createElement("input");
+    document.body.append(inpTodo);
+
+    let btnAdd = document.createElement("button");
+    btnAdd.innerHTML = "Ekle";
+    document.body.append(btnAdd);
+
+    btnAdd.onclick = function () {
+        if (inpTodo.value.trim() == "") {
+            alert("Boş ifade eklenemez!");
+            return;
+        }
+        let liTodo = document.createElement("li");
+        liTodo.innerHTML = inpTodo.value;
+        ulList.append(liTodo);
+        inpTodo.value = "";
+    };
+
+    let ulList = document.createElement("ul");
+    document.body.append(ulList);
+
+
+</script>
+
+</html>

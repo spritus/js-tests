@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .hello {
+            width: 100px;
+            background-color: red !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="kutu"></div>
+</body>
+
+<script>
+    let box = document.getElementById("kutu");
+    box.innerHTML = "Merhaba";
+    box.style.color = "red";
+    box.style.fontWeight = "bold";
+    box.style.textAlign = "right";
+    box.style.width = "500px";
+    box.style.position = "absolute";
+    box.style.right = "0";
+    box.style.bottom = "0";
+
+    let hello = document.createElement("div");
+    hello.innerHTML = "Hello!";
+    document.body.append(hello);
+    hello.style.backgroundColor = "cyan";
+    hello.classList.add("hello");
+
+
+</script>
+
+</html>
