@@ -16,7 +16,7 @@
             tmp.innerHTML = html.trim();
             let elm = tmp.content.firstElementChild;
 
-            function feat(el) {
+            function props(el) {
                 el.css = function (css) {
                     for (c in css) {
                         el.style[c] = css[c];
@@ -59,11 +59,11 @@
             }
 
             elm.querySelectorAll("[id]").forEach((e) => {
-                elm[e.id] = feat(e);
+                elm[e.id] = props(e);
                 elm[e.id].parent = elm;
             });
 
-            return feat(elm);
+            return props(elm);
         }
 
         let card = newElm(/* html*/`
