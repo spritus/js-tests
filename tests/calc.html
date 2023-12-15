@@ -140,7 +140,12 @@
             };
 
             cell.onblur = function () {
-                function update(tcell, root) {
+                function update(tcell, root, n) {
+                    if (n > 1000) {
+                        tcell.value = "#ERR";
+                        return;
+                    }
+
                     if (root) {
                         for (let cl of tcell.affecteds) {
                             cl.effects.delete(tcell);
@@ -166,10 +171,10 @@
                         tcell.style.textAlign = "right";
                     }
                     for (let cl of tcell.effects) {
-                        update(cl, false);
+                        update(cl, false, n + 1);
                     }
                 }
-                update(this, true);
+                update(this, true, 1);
             };
             cells[row][col] = cell;
         }
