@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="\bootstrap.min.css">
+    <link rel="stylesheet" href="..\bootstrap.min.css">
     <title>Document</title>
     <style>
         *:focus {
@@ -71,7 +71,7 @@
             return props(elm);
         }
 
-        let card = newElm(/* html*/`
+        let card = newElm(/* html */`
             <div class="card w-100 m-1" style="max-width:600px">
                 <div class="card-header fw-bold" id="head">Personel Maaşları</div>
                 <div class="card-body" id="body"></div>
@@ -80,7 +80,7 @@
         `).addTo(document.body);
 
         function inputBox(label) {
-            return newElm(/* html*/`
+            return newElm(/* html */`
                 <div class="input-group mb-1">
                     <span class="input-group-text w-25" id="label">${label}</span>
                     <input type="text" class="form-control" val>
@@ -105,7 +105,7 @@
 
         btnKaydet.btn.onclick = () => {
             //alert();
-            console.log(adSoyad.val("15"));
+            console.log(adSoyad.val("13"));
         }
 
         adSoyad.btn.onclick = function () {

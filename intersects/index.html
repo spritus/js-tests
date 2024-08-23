@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body {
+            background-color: #777;
+            text-align: center;
+            font-family: Verdana, Geneva, Tahoma, sans-serif;
+            font-size: 8px;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        #screen {
+            position: relative;
+            overflow: hidden;
+            width: 800px;
+            height: 600px;
+            background-color: #999;
+            border: solid 5px #fff;
+            margin: 0 auto;
+        }
+
+        #linelayer {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+        .station {
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            box-sizing: border-box;
+            background-color: #5c0;
+            border: solid 2px #ddd;
+            border-radius: 50%;
+            z-index: 1;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="screen">
+        <div id="linelayer"></div>
+    </div>
+    <script>
+        const screen = document.getElementById("screen");
+        const lineLayer = document.getElementById("linelayer");
+        let z = 0;
+
+        let stations = [];
+        let lines = [];
+
+        function line(x1, y1, x2, y2) {
+            if (x2 < x1) {
+                var tmp;
+                tmp = x2; x2 = x1; x1 = tmp;
+                tmp = y2; y2 = y1; y1 = tmp;
+            }
+
+            var lineLength = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+            var m = (y2 - y1) / (x2 - x1);
+
+            var degree = Math.atan(m) * 180 / Math.PI;
+
+            lineLayer.innerHTML += "<div style='opacity: 0.3; transform-origin: top left; transform: rotate(" + degree + "deg); width: " + lineLength + "px; height: 3px; background: black; position: absolute; top: " + y1 + "px; left: " + x1 + "px;'></div>";
+        }
+
+        window.onload = () => {
+            screen.ondragstart = () => false;
+            for (let n = 0; n < 20; n++) {
+                const station = document.createElement("div");
+                station.className = "station";
+                station.x = 100 + Math.floor(Math.random() * 600);
+                station.y = 100 + Math.floor(Math.random() * 400);
+                station.style.left = station.x + "px";
+                station.style.top = station.y + "px";
+
+                station.onmousedown = (event) => {
+                    event.preventDefault();
+                    let shiftX = event.clientX - station.getBoundingClientRect().left + 5;
+                    let shiftY = event.clientY - station.getBoundingClientRect().top + 5;
+                    station.style.zIndex = ++z;
+                    function moveAt(pageX, pageY) {
+                        station.x = pageX - shiftX;
+                        station.x = station.x > screen.offsetWidth - 50 ? screen.offsetWidth - 50 : station.x;
+                        station.x = station.x < 0 ? 0 : station.x;
+                        station.y = pageY - shiftY;
+                        station.y = station.y > screen.offsetHeight - 50 ? screen.offsetHeight - 50 : station.y;
+                        station.y = station.y < 0 ? 0 : station.y;
+                        station.style.left = station.x + 'px';
+                        station.style.top = station.y + 'px';
+                    }
+
+                    moveAt(event.pageX - screen.offsetLeft, event.pageY - screen.offsetTop);
+
+                    function onMouseMove(e) {
+                        moveAt(e.pageX - screen.offsetLeft, e.pageY - screen.offsetTop);
+                        lineLayer.innerHTML = "";
+                        for (let ln of lines) {
+                            line(stations[ln[0]].x + 7, stations[ln[0]].y + 7, stations[ln[1]].x + 7, stations[ln[1]].y + 7);
+                        }
+                    }
+
+                    screen.addEventListener('mousemove', onMouseMove);
+
+                    station.onmouseup = function () {
+                        screen.removeEventListener('mousemove', onMouseMove);
+                        station.onmouseup = null;
+                    };
+                }
+
+                stations.push(station);
+                screen.append(station);
+            }
+
+            for (let n = 0; n < 10; n++) {
+                sta1 = Math.floor(Math.random() * 20);
+                sta2 = Math.floor(Math.random() * 20);
+                if (sta1 == sta2 || lines.includes([sta1, sta2]) || lines.includes([sta2, sta1])) continue;
+                line(stations[sta1].x + 7, stations[sta1].y + 7, stations[sta2].x + 7, stations[sta2].y + 7);
+                lines.push([sta1, sta2]);
+            }
+            console.log(lines);
+        }
+    </script>
+</body>
+
+</html>
