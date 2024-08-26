@@ -121,14 +121,13 @@
                 screen.append(station);
             }
 
-            for (let n = 0; n < 10; n++) {
-                sta1 = Math.floor(Math.random() * 20);
-                sta2 = Math.floor(Math.random() * 20);
-                if (sta1 == sta2 || lines.includes([sta1, sta2]) || lines.includes([sta2, sta1])) continue;
+            for (let n = 0; n < 30; n++) {
+                let sta1 = Math.floor(Math.random() * 20);
+                let sta2 = Math.floor(Math.random() * 20);
+                if (sta1 == sta2 || lines.filter((a) => a[0] == sta1 && a[1] == sta2 || a[0] == sta2 && a[1] == sta1).length) continue;
                 line(stations[sta1].x + 7, stations[sta1].y + 7, stations[sta2].x + 7, stations[sta2].y + 7);
                 lines.push([sta1, sta2]);
             }
-            console.log(lines);
         }
     </script>
 </body>
