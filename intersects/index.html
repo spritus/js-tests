@@ -58,7 +58,7 @@
         let stations = [];
         let lines = [];
 
-        function line(x1, y1, x2, y2) {
+        function line(x1, y1, x2, y2, c = "black") {
             if (x2 < x1) {
                 var tmp;
                 tmp = x2; x2 = x1; x1 = tmp;
@@ -70,7 +70,26 @@
 
             var degree = Math.atan(m) * 180 / Math.PI;
 
-            lineLayer.innerHTML += "<div style='opacity: 0.3; transform-origin: top left; transform: rotate(" + degree + "deg); width: " + lineLength + "px; height: 3px; background: black; position: absolute; top: " + y1 + "px; left: " + x1 + "px;'></div>";
+            lineLayer.innerHTML += "<div style='opacity: 0.3; transform-origin: top left; transform: rotate(" + degree + "deg); width: " + lineLength + "px; height: 3px; background: " + c + "; position: absolute; top: " + y1 + "px; left: " + x1 + "px;'></div>";
+        }
+
+        function intersect(x1_, y1_, x2_, y2_, x3_, y3_, x4_, y4_) {
+            let ks1 = 1 / Math.sqrt((x2_ - x1_) ** 2 + (y2_ - y1_) ** 2);
+            let x1 = x1_ - ks1 * (x1_ - x2_);
+            let y1 = y1_ - ks1 * (y1_ - y2_);
+            let x2 = x2_ + ks1 * (x1_ - x2_);
+            let y2 = y2_ + ks1 * (y1_ - y2_);
+
+            let k2 = 1 / Math.sqrt((x4_ - x3_) ** 2 + (y4_ - y3_) ** 2);
+            let x3 = x3_ - k2 * (x3_ - x4_);
+            let y3 = y3_ - k2 * (y3_ - y4_);
+            let x4 = x4_ + k2 * (x3_ - x4_);
+            let y4 = y4_ + k2 * (y3_ - y4_);
+
+            let ua = ((x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3)) / ((y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1));
+            let ub = ((x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3)) / ((y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1));
+
+            return !(ua < 0 || ua > 1 || ub < 0 || ub > 1);
         }
 
         window.onload = () => {
@@ -104,14 +123,12 @@
                     function onMouseMove(e) {
                         moveAt(e.pageX - screen.offsetLeft, e.pageY - screen.offsetTop);
                         lineLayer.innerHTML = "";
-                        for (let ln of lines) {
-                            line(stations[ln[0]].x + 7, stations[ln[0]].y + 7, stations[ln[1]].x + 7, stations[ln[1]].y + 7);
-                        }
+                        drawLines();
                     }
 
                     screen.addEventListener('mousemove', onMouseMove);
 
-                    station.onmouseup = function () {
+                    window.onmouseup = function () {
                         screen.removeEventListener('mousemove', onMouseMove);
                         station.onmouseup = null;
                     };
@@ -121,14 +138,30 @@
                 screen.append(station);
             }
 
-            for (sta in stations) {
+            for (let sta in stations) {
                 for (let n = 0; n < 1 + Math.random() * 1; n++) {
                     let csta = Math.floor(Math.random() * 20);
                     if (sta == csta || lines.filter((a) => a[0] == sta && a[1] == csta || a[0] == csta && a[1] == sta).length) continue;
-                    line(stations[sta].x + 7, stations[sta].y + 7, stations[csta].x + 7, stations[csta].y + 7);
-                    lines.push([sta, csta]);
+                    lines.push([Number(sta), Number(csta)]);
                 }
             }
+
+            function drawLines() {
+                lineLayer.innerHTML = "";
+                for (let ln of lines) {
+                    let c = "green";
+                    for (let oln of lines) {
+                        if (ln[0] != oln[0] && ln[1] != oln[1]) {
+                            if (intersect(stations[ln[0]].x, stations[ln[0]].y, stations[ln[1]].x, stations[ln[1]].y, stations[oln[0]].x, stations[oln[0]].y, stations[oln[1]].x, stations[oln[1]].y)) {
+                                c = "red";
+                                break;
+                            }
+                        }
+                    }
+                    line(stations[ln[0]].x + 7, stations[ln[0]].y + 7, stations[ln[1]].x + 7, stations[ln[1]].y + 7, c);
+                }
+            }
+            drawLines();
         }
     </script>
 </body>
