@@ -73,18 +73,21 @@
             lineLayer.innerHTML += "<div style='opacity: 0.3; transform-origin: top left; transform: rotate(" + degree + "deg); width: " + lineLength + "px; height: 3px; background: " + c + "; position: absolute; top: " + y1 + "px; left: " + x1 + "px;'></div>";
         }
 
-        function intersect(x1_, y1_, x2_, y2_, x3_, y3_, x4_, y4_) {
-            let ks1 = 1 / Math.sqrt((x2_ - x1_) ** 2 + (y2_ - y1_) ** 2);
-            let x1 = x1_ - ks1 * (x1_ - x2_);
-            let y1 = y1_ - ks1 * (y1_ - y2_);
-            let x2 = x2_ + ks1 * (x1_ - x2_);
-            let y2 = y2_ + ks1 * (y1_ - y2_);
+        function intersect(x1, y1, x2, y2, x3, y3, x4, y4) {
+            if (x1 == x3 && y1 == y3 || x1 == x4 && y1 == y4 || x2 == x3 && y2 == y3 || x2 == x4 && y2 == y4) return false;
 
-            let k2 = 1 / Math.sqrt((x4_ - x3_) ** 2 + (y4_ - y3_) ** 2);
-            let x3 = x3_ - k2 * (x3_ - x4_);
-            let y3 = y3_ - k2 * (y3_ - y4_);
-            let x4 = x4_ + k2 * (x3_ - x4_);
-            let y4 = y4_ + k2 * (y3_ - y4_);
+            /*          Çizgileri kısaltma yöntemi   
+                        let ks1 = 1 / Math.sqrt((x2_ - x1_) ** 2 + (y2_ - y1_) ** 2);
+                        let x1 = x1_ - ks1 * (x1_ - x2_);
+                        let y1 = y1_ - ks1 * (y1_ - y2_);
+                        let x2 = x2_ + ks1 * (x1_ - x2_);
+                        let y2 = y2_ + ks1 * (y1_ - y2_);
+            
+                        let k2 = 1 / Math.sqrt((x4_ - x3_) ** 2 + (y4_ - y3_) ** 2);
+                        let x3 = x3_ - k2 * (x3_ - x4_);
+                        let y3 = y3_ - k2 * (y3_ - y4_);
+                        let x4 = x4_ + k2 * (x3_ - x4_);
+                        let y4 = y4_ + k2 * (y3_ - y4_); */
 
             let ua = ((x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3)) / ((y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1));
             let ub = ((x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3)) / ((y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1));
