@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reactive Class Example</title>
+</head>
+
+<body>
+    <p id="output"></p>
+
+    <script>
+        class ReactiveClass {
+            constructor() {
+                this._data = {};
+                this._dependencies = {};
+            }
+
+            // Özellik ekleme
+            addProperty(key, initialValue) {
+                this._data[key] = initialValue;
+
+                Object.defineProperty(this, key, {
+                    get: () => this._data[key],
+                    set: (value) => {
+                        this._data[key] = value;
+                        this._updateDependencies(key);
+                    },
+                });
+            }
+
+            // Formül ekleme
+            addFormula(key, formula) {
+                const formulaFunction = new Function(
+                    ...Object.keys(this._data),
+                    `return ${formula};`
+                );
+                this._dependencies[key] = () => {
+                    this._data[key] = formulaFunction(...Object.values(this._data));
+                };
+                this._dependencies[key](); // İlk hesaplama
+                Object.defineProperty(this, key, {
+                    get: () => this._data[key],
+                });
+            }
+
+            // Tüm bağımlılıkları güncelle
+            _updateDependencies(changedKey) {
+                for (const [key, updateFn] of Object.entries(this._dependencies)) {
+                    updateFn();
+                }
+            }
+        }
+
+        // ReactiveClass kullanımı
+        const reactiveObject = new ReactiveClass();
+
+        // Özellik ekleme
+        reactiveObject.addProperty('a', 10);
+        reactiveObject.addProperty('b', 20);
+
+        // Formül ekleme
+        reactiveObject.addFormula('sum', 'a + b'); // sum = a + b
+        reactiveObject.addFormula('product', 'a * b'); // product = a * b
+
+        // DOM'a yazdırma
+        const output = document.getElementById('output');
+        const render = () => {
+            output.textContent = `a: ${reactiveObject.a}, b: ${reactiveObject.b}, sum: ${reactiveObject.sum}, product: ${reactiveObject.product}`;
+        };
+        render();
+
+        // Değişiklikleri izleme
+        reactiveObject.addProperty('c', 5);
+        reactiveObject.addFormula('complex', 'sum + product * c');
+
+        // Değerleri değiştirme ve render
+        reactiveObject.a = 15;
+        reactiveObject.b = 30;
+        render();
+
+        console.log(reactiveObject.complex); // Güncel complex değeri
+        reactiveObject.b = 7;
+        console.log(reactiveObject.sum);
+        console.log(reactiveObject.complex); // Güncel complex değeri
+    </script>
+</body>
+
+</html>

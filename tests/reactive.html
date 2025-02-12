@@ -31,6 +31,14 @@
                     }
                 });
             }
+
+            setup(w, fn) {
+                this.sets[w] = fn;
+            }
+
+            getup(w, fn) {
+                this.gets[w] = fn;
+            }
         }
 
         let div = document.createElement("div");
@@ -47,7 +55,7 @@
         data.b = 0;
         data.c = 0;
 
-        data.sets["a"] = (v) => {
+        /*data.sets["a"] = (v) => {
             data.b = v * 5;
             div.innerHTML = data.b;
         }
@@ -58,7 +66,20 @@
 
         data.gets["area"] = () => {
             return data.a * data.b;
-        }
+        }*/
+
+        data.setup("a", (v) => {
+            data.b = v * 5;
+            div.innerHTML = data.b;
+        });
+
+        data.setup("b", (v) => {
+            data.c = v + 1;
+        });
+
+        data.getup("area", () => {
+            return data.a * data.b;
+        });
 
         data.a = 7;
         console.log(data.a, data.b, data.c);

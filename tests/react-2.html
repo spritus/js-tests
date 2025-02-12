@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+
+    <script>
+        /************** En düzgünü bu: Deepseek ürünü *****************/
+
+        class ReactiveClass {
+            constructor() {
+                this._data = {};
+                this._formulas = new Map(); // Formülleri saklamak için bir Map
+                this._dependencies = new Map(); // Bağımlılıkları takip etmek için bir Map
+
+                return new Proxy(this, {
+                    set(target, property, value) {
+                        if (typeof value === 'string' && value.startsWith('=')) {
+                            // Eğer değer bir formül ise (='...' şeklinde)
+                            value = value.slice(1);
+
+                            // Eğer değer bir formül ise (içinde matematiksel operatörler varsa)
+                            target._formulas.set(property, value);
+                            target._updateDependencies(property, value); // Bağımlılıkları güncelle
+                            target._updateComputedProperty(property); // Formülü hesapla
+                        } else {
+                            // Eğer değer normal bir değer ise
+                            target._data[property] = value;
+                            target._updateDependents(property); // Bu property'ye bağlı formülleri güncelle
+                        }
+                        return true;
+                    },
+                    get(target, property) {
+                        if (property in target) {
+                            return target[property];
+                        }
+                        // Eğer property bir formül ise, güncel değerini hesapla
+                        if (target._formulas.has(property)) {
+                            target._updateComputedProperty(property); // Formülü yeniden hesapla
+                            return target._data[property];
+                        }
+                        return target._data[property];
+                    },
+                });
+            }
+
+            _updateDependencies(property, formula) {
+                // Formüldeki bağımlılıkları bul ve kaydet
+                const dependencies = new Set();
+                for (const key of Object.keys(this._data)) {
+                    if (formula.includes(key)) {
+                        dependencies.add(key);
+                    }
+                }
+                this._dependencies.set(property, dependencies);
+            }
+
+            _updateComputedProperty(property) {
+                const formula = this._formulas.get(property);
+                if (formula) {
+                    const computedValue = this._evaluateFormula(formula, this._data);
+                    this._data[property] = computedValue;
+                }
+            }
+
+            _updateDependents(changedProperty) {
+                // Bu property'ye bağlı olan tüm formülleri güncelle
+                for (const [property, dependencies] of this._dependencies.entries()) {
+                    if (dependencies.has(changedProperty)) {
+                        this._updateComputedProperty(property);
+                    }
+                }
+            }
+
+            _evaluateFormula(formula, context) {
+                // Güvenli bir şekilde formülü değerlendirmek için Function constructor kullanıyoruz.
+                try {
+                    const func = new Function(...Object.keys(context), `return ${formula}`);
+                    return func(...Object.values(context));
+                } catch (error) {
+                    console.error('Formül değerlendirme hatası:', error);
+                    return null;
+                }
+            }
+        }
+
+        // Örnek kullanım:
+        const data = new ReactiveClass();
+
+        data.a = 10;
+        data.b = 20;
+        data.sum = "=a + b"; // sum otomatik olarak 30 olacak
+        data.total = "=sum + 100"; // total, sum'a bağlı ve 130 olacak
+
+        console.log(data.sum); // 30
+        console.log(data.total); // 130
+
+        data.mean = "=total/3";
+
+        data.a = 50; // a değiştiğinde sum ve total otomatik olarak güncellenecek
+        console.log(data.sum); // 70
+        console.log(data.total); // 170
+        console.log(data.mean);
+    </script>
+</body>
+
+</html>
