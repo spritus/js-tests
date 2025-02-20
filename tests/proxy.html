@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+
+    <script>
+        class Reactive {
+            constructor() {
+                this.sets = [];
+                this.gets = [];
+
+                // Proxy oluşturma: nesne üzerinde set işlemi yapılırken devreye girer
+                return new Proxy(this, {
+                    set: (target, property, value) => {
+                        let ret = true;
+                        if (this.sets[property]) ret = this.sets[property](value);
+                        if (ret !== false) target[property] = value;
+                    },
+                    get: (target, property) => {
+                        for (let p in this.gets) {
+                            if (property === p) return this.gets[p](target, property);
+                        }
+
+                        return target[property];
+                    }
+                });
+            }
+
+            setup(w, fn) {
+                this.sets[w] = fn;
+            }
+
+            getup(w, fn) {
+                this.gets[w] = fn;
+            }
+        }
+
+        let div = document.createElement("div");
+        document.body.appendChild(div);
+
+        let inp = document.createElement("input");
+        document.body.appendChild(inp);
+        inp.onblur = () => {
+            data.a = parseInt(inp.value);
+        }
+
+        const data = new Reactive();
+        data.a = 0;
+        data.b = 0;
+        data.c = 0;
+
+        /*data.sets["a"] = (v) => {
+            data.b = v * 5;
+            div.innerHTML = data.b;
+        }
+
+        data.sets["b"] = (v) => {
+            data.c = v + 1;
+        }
+
+        data.gets["area"] = () => {
+            return data.a * data.b;
+        }*/
+
+        data.setup("a", (v) => {
+            data.b = v * 5;
+            div.innerHTML = data.b;
+        });
+
+        data.setup("b", (v) => {
+            data.c = v + 1;
+        });
+
+        data.getup("area", () => {
+            return data.a * data.b;
+        });
+
+        data.a = 7;
+        console.log(data.a, data.b, data.c);
+        data.a = 3;
+        console.log(data.a, data.b, data.c);
+        console.log(data.area);
+        setTimeout(() => {
+            data.a = 10;
+        }, 5000);
+
+    </script>
+</body>
+
+</html>
