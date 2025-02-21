@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Satranç Oyunu</title>
+    <style>
+        #chess-board {
+            width: 400px;
+            height: 400px;
+            border: 1px solid black;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+        }
+
+        .square {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 35px;
+            cursor: pointer;
+        }
+
+        .white {
+            background-color: #f0d9b5;
+        }
+
+        .black {
+            background-color: #b58863;
+        }
+
+        .selected {
+            background-color: #7b61ff;
+        }
+
+        .possible-move {
+            background-color: #aaf683;
+        }
+
+        .turn-indicator {
+            text-align: center;
+            font-size: 24px;
+            margin: 20px;
+            font-family: Arial, sans-serif;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="turn-indicator">Sıra: <span id="turn">Beyaz</span></div>
+    <div id="chess-board"></div>
+    <script>
+        const board = document.getElementById('chess-board');
+        const turnIndicator = document.getElementById('turn');
+        let selectedPiece = null;
+        let isWhiteTurn = true;
+        // Satranç taşlarının Unicode karakterleri
+        const pieces = {
+            white: {
+                king: '♔',
+                queen: '♕',
+                rook: '♖',
+                bishop: '♗',
+                knight: '♘',
+                pawn: '♙'
+            },
+            black: {
+                king: '♚',
+                queen: '♛',
+                rook: '♜',
+                bishop: '♝',
+                knight: '♞',
+                pawn: '♟'
+            }
+        };
+        // Başlangıç pozisyonu
+        let gameState = [
+            ['br', 'bn', 'bb', 'bq', 'bk', 'bb', 'bn', 'br'],
+            ['bp', 'bp', 'bp', 'bp', 'bp', 'bp', 'bp', 'bp'],
+            ['', '', '', '', '', '', '', ''],
+            ['', '', '', '', '', '', '', ''],
+            ['', '', '', '', '', '', '', ''],
+            ['', '', '', '', '', '', '', ''],
+            ['wp', 'wp', 'wp', 'wp', 'wp', 'wp', 'wp', 'wp'],
+            ['wr', 'wn', 'wb', 'wq', 'wk', 'wb', 'wn', 'wr']
+        ];
+        function createBoard() {
+            board.innerHTML = '';
+            for (let i = 0; i < 8; i++) {
+                for (let j = 0; j < 8; j++) {
+                    const square = document.createElement('div');
+                    square.className = `square ${(i + j) % 2 === 0 ? 'white' : 'black'}`;
+                    square.dataset.row = i;
+                    square.dataset.col = j;
+
+                    const piece = gameState[i][j];
+                    if (piece) {
+                        const color = piece[0] === 'w' ? 'white' : 'black';
+                        const pieceType = piece[1];
+                        let unicode;
+                        switch (pieceType) {
+                            case 'k': unicode = pieces[color].king; break;
+                            case 'q': unicode = pieces[color].queen; break;
+                            case 'r': unicode = pieces[color].rook; break;
+                            case 'b': unicode = pieces[color].bishop; break;
+                            case 'n': unicode = pieces[color].knight; break;
+                            case 'p': unicode = pieces[color].pawn; break;
+                        }
+                        square.textContent = unicode;
+                    }
+                    square.addEventListener('click', handleSquareClick);
+                    board.appendChild(square);
+                }
+            }
+        }
+        function handleSquareClick(event) {
+            const square = event.target;
+            const row = parseInt(square.dataset.row);
+            const col = parseInt(square.dataset.col);
+            const piece = gameState[row][col];
+            // Seçili taş yoksa ve tıklanan karede taş varsa
+            if (!selectedPiece && piece) {
+                const pieceColor = piece[0] === 'w';
+                if (pieceColor === isWhiteTurn) {
+                    selectedPiece = { row, col, piece };
+                    square.classList.add('selected');
+                    showPossibleMoves(row, col, piece);
+                }
+            }
+            // Seçili taş varsa ve farklı bir kareye tıklandıysa
+            else if (selectedPiece) {
+                const startRow = selectedPiece.row;
+                const startCol = selectedPiece.col;
+                // Eğer geçerli bir hamle ise
+                if (isValidMove(startRow, startCol, row, col)) {
+                    // Taşı hareket ettir
+                    gameState[row][col] = selectedPiece.piece;
+                    gameState[startRow][startCol] = '';
+
+                    // Sırayı değiştir
+                    isWhiteTurn = !isWhiteTurn;
+                    turnIndicator.textContent = isWhiteTurn ? 'Beyaz' : 'Siyah';
+                }
+                // Seçimi temizle
+                clearSelection();
+                createBoard();
+            }
+        }
+        function showPossibleMoves(row, col, piece) {
+            // Bu fonksiyon, seçili taşın gidebileceği kareleri gösterir
+            // Basitlik için sadece piyonların hareketini gösterelim
+            if (piece[1] === 'p') {
+                const direction = piece[0] === 'w' ? -1 : 1;
+                const nextRow = row + direction;
+
+                if (nextRow >= 0 && nextRow < 8 && !gameState[nextRow][col]) {
+                    const square = document.querySelector(`[data-row="${nextRow}"][data-col="${col}"]`);
+                    square.classList.add('possible-move');
+                }
+            }
+        }
+        function isValidMove(startRow, startCol, endRow, endCol) {
+            const piece = gameState[startRow][startCol];
+            const targetPiece = gameState[endRow][endCol];
+            // Hedef karede kendi taşımız varsa geçersiz hamle
+            if (targetPiece && targetPiece[0] === piece[0]) {
+                return false;
+            }
+            // Piyon hareketi için basit kontrol
+            if (piece[1] === 'p') {
+                const direction = piece[0] === 'w' ? -1 : 1;
+                return endCol === startCol && endRow === startRow + direction;
+            }
+            return true; // Diğer taşlar için basit kontrol
+        }
+        function clearSelection() {
+            selectedPiece = null;
+            document.querySelectorAll('.square').forEach(square => {
+                square.classList.remove('selected', 'possible-move');
+            });
+        }
+        // Oyunu başlat
+        createBoard();
+    </script>
+</body>
+
+</html>

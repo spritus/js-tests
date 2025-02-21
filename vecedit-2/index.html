@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vektör Editörü</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+    <style>
+        .container {
+            display: flex;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .toolbar {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toolbar button {
+            padding: 10px;
+            cursor: pointer;
+        }
+
+        #renk-secici {
+            width: 100px;
+            height: 40px;
+        }
+
+        .canvas-container {
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="toolbar">
+            <button onclick="sekilEkle('cizgi')">Çizgi</button>
+            <button onclick="sekilEkle('daire')">Daire</button>
+            <button onclick="sekilEkle('dikdortgen')">Dikdörtgen</button>
+            <button onclick="sekilEkle('cokgen')">Çokgen</button>
+            <button onclick="seciliNesneyiSil()">Sil</button>
+            <input type="color" id="renk-secici" onchange="renkDegistir(this.value)" value="#000000">
+        </div>
+        <canvas id="canvas" width="800" height="600"></canvas>
+    </div>
+
+    <script>
+        const canvas = new fabric.Canvas('canvas');
+        let secilenRenk = '#000000';
+
+        // Çokgen için nokta sayısı
+        const cokgenNoktaSayisi = 6;
+
+        function sekilEkle(tip) {
+            let sekil;
+
+            switch (tip) {
+                case 'cizgi':
+                    sekil = new fabric.Line([50, 50, 200, 50], {
+                        stroke: secilenRenk,
+                        strokeWidth: 2
+                    });
+                    break;
+                case 'daire':
+                    sekil = new fabric.Circle({
+                        radius: 50,
+                        fill: secilenRenk,
+                        left: 100,
+                        top: 100
+                    });
+                    break;
+                case 'dikdortgen':
+                    sekil = new fabric.Rect({
+                        width: 100,
+                        height: 100,
+                        fill: secilenRenk,
+                        left: 100,
+                        top: 100
+                    });
+                    break;
+                case 'cokgen':
+                    const noktalar = [];
+                    for (let i = 0; i < cokgenNoktaSayisi; i++) {
+                        const açı = (Math.PI * 2 * i) / cokgenNoktaSayisi;
+                        const x = 50 * Math.cos(açı);
+                        const y = 50 * Math.sin(açı);
+                        noktalar.push({ x, y });
+                    }
+                    sekil = new fabric.Polygon(noktalar, {
+                        fill: secilenRenk,
+                        left: 100,
+                        top: 100
+                    });
+                    break;
+            }
+
+            if (sekil) {
+                canvas.add(sekil);
+                canvas.setActiveObject(sekil);
+                canvas.renderAll();
+            }
+        }
+
+        function renkDegistir(yeniRenk) {
+            secilenRenk = yeniRenk;
+            const aktifNesne = canvas.getActiveObject();
+            if (aktifNesne) {
+                if (aktifNesne.type === 'line') {
+                    aktifNesne.set('stroke', yeniRenk);
+                } else {
+                    aktifNesne.set('fill', yeniRenk);
+                }
+                canvas.renderAll();
+            }
+        }
+
+        function seciliNesneyiSil() {
+            const aktifNesne = canvas.getActiveObject();
+            if (aktifNesne) {
+                canvas.remove(aktifNesne);
+                canvas.renderAll();
+            }
+        }
+
+        // Nesne seçimi değiştiğinde renk seçiciyi güncelle
+        canvas.on('selection:created', function (e) {
+            const nesne = e.selected[0];
+            const renk = nesne.type === 'line' ? nesne.stroke : nesne.fill;
+            document.getElementById('renk-secici').value = renk;
+        });
+    </script>
+</body>
+
+</html>

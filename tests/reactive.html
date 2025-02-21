@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+
+    <script>
+        /************** En düzgünü bu: Deepseek ürünü *****************/
+
+        class ReactiveClass {
+            constructor() {
+                this._data = {};
+                this._formulas = new Map(); // Formülleri saklamak için bir Map
+                this._dependencies = new Map(); // Bağımlılıkları takip etmek için bir Map
+                this._callbacks = new Map(); // Property değişikliklerinde çalışacak callback'leri saklamak için bir Map
+
+                return new Proxy(this, {
+                    set(target, property, value) {
+                        if (typeof value === 'string' && value.startsWith('=')) {
+                            // Eğer değer bir formül ise (= ile başlıyorsa)
+                            const formula = value.slice(1); // = işaretini kaldır
+                            target._formulas.set(property, formula);
+                            target._updateDependencies(property, formula); // Bağımlılıkları güncelle
+                            target._updateComputedProperty(property); // Formülü hesapla
+                        } else {
+                            // Eğer değer normal bir değer ise
+                            const oldValue = target._data[property];
+                            target._data[property] = value;
+                            target._updateDependents(property); // Bu property'ye bağlı formülleri güncelle
+
+                            // Eğer bu property için bir callback varsa, çalıştır
+                            if (target._callbacks.has(property)) {
+                                const callback = target._callbacks.get(property);
+                                callback(value, oldValue); // Yeni değer ve eski değer callback'e iletilir
+                            }
+                        }
+                        return true;
+                    },
+                    get(target, property) {
+                        if (property in target) {
+                            return target[property];
+                        }
+                        // Eğer property bir formül ise, güncel değerini hesapla
+                        if (target._formulas.has(property)) {
+                            target._updateComputedProperty(property); // Formülü yeniden hesapla
+                            return target._data[property];
+                        }
+                        return target._data[property];
+                    },
+                });
+            }
+
+            // Property değişikliklerinde çalışacak bir callback ekler
+            onChange(property, callback) {
+                this._callbacks.set(property, callback);
+            }
+
+            _updateDependencies(property, formula) {
+                // Formüldeki bağımlılıkları bul ve kaydet
+                const dependencies = new Set();
+                for (const key of Object.keys(this._data)) {
+                    if (formula.includes(key)) {
+                        dependencies.add(key);
+                    }
+                }
+                this._dependencies.set(property, dependencies);
+            }
+
+            _updateComputedProperty(property) {
+                const formula = this._formulas.get(property);
+                if (formula) {
+                    const computedValue = this._evaluateFormula(formula, this._data);
+                    const oldValue = this._data[property];
+                    this._data[property] = computedValue;
+
+                    // Eğer bu property için bir callback varsa, çalıştır
+                    if (this._callbacks.has(property)) {
+                        const callback = this._callbacks.get(property);
+                        callback(computedValue, oldValue); // Yeni değer ve eski değer callback'e iletilir
+                    }
+
+                    // Bu property'ye bağlı olan diğer formülleri de güncelle
+                    this._updateDependents(property);
+                }
+            }
+
+            _updateDependents(changedProperty) {
+                // Bu property'ye bağlı olan tüm formülleri güncelle
+                for (const [property, dependencies] of this._dependencies.entries()) {
+                    if (dependencies.has(changedProperty)) {
+                        this._updateComputedProperty(property);
+                    }
+                }
+            }
+
+            _evaluateFormula(formula, context) {
+                // Güvenli bir şekilde formülü değerlendirmek için Function constructor kullanıyoruz.
+                try {
+                    const func = new Function(...Object.keys(context), `return ${formula}`);
+                    return func(...Object.values(context));
+                } catch (error) {
+                    console.error('Formül değerlendirme hatası:', error);
+                    return null;
+                }
+            }
+        }
+
+        // Örnek kullanım:
+        const data = new ReactiveClass();
+        const div = document.createElement("div");
+        const inp = document.createElement("input");
+
+        document.body.append(div);
+        document.body.append(inp);
+
+        data.a = 10;
+        data.b = 20;
+        data.sum = '=a + b'; // sum otomatik olarak 30 olacak
+        data.total = '=sum + 100'; // total, sum'a bağlı ve 130 olacak
+
+        // a property'si değiştiğinde çalışacak bir callback ekleyelim
+        data.onChange('a', (newValue, oldValue) => {
+            console.log(`a değişti! Eski değer: ${oldValue}, Yeni değer: ${newValue}`);
+        });
+
+        // sum property'si değiştiğinde çalışacak bir callback ekleyelim
+        data.onChange('sum', (newValue, oldValue) => {
+            console.log(`sum değişti! Eski değer: ${oldValue}, Yeni değer: ${newValue}`);
+        });
+
+        // total property'si değiştiğinde çalışacak bir callback ekleyelim
+        data.onChange('total', (newValue, oldValue) => {
+            console.log(`total değişti! Eski değer: ${oldValue}, Yeni değer: ${newValue}`);
+            div.innerText = newValue;
+        });
+
+        console.log(data.sum); // 30
+        console.log(data.total); // 130
+
+        data.a = 50; // a değiştiğinde sum ve total otomatik olarak güncellenecek
+        // Çıktı:
+        // a değişti! Eski değer: 10, Yeni değer: 50
+        // sum değişti! Eski değer: 30, Yeni değer: 70
+        // total değişti! Eski değer: 130, Yeni değer: 170
+
+        console.log(data.sum); // 70
+        console.log(data.total); // 170
+
+        inp.oninput = () => {
+            data.a = Number(inp.value);
+        };
+    </script>
+</body>
+
+</html>

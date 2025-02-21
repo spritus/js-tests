@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Görsel Kodlama Editörü</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #f7f7f7;
+            font-family: Arial, sans-serif;
+        }
+
+        .workspace {
+            display: flex;
+            gap: 20px;
+            height: calc(100vh - 40px);
+        }
+
+        .toolbox {
+            width: 220px;
+            flex-shrink: 0;
+            background: white;
+            border-radius: 5px;
+            padding: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        .category {
+            margin-bottom: 15px;
+        }
+
+        .category-title {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+            padding-left: 5px;
+        }
+
+        .coding-area {
+            width: 220px;
+            flex-shrink: 0;
+            background: white;
+            border-radius: 5px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            min-height: 300px;
+        }
+
+        .preview-area {
+            flex: 1;
+            background: white;
+            border-radius: 5px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        .preview-area-title {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+            padding-left: 5px;
+        }
+
+        .item {
+            padding: 8px 10px;
+            margin: 5px 0;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: move;
+            position: relative;
+        }
+
+        .item::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 10px;
+            height: 5px;
+            background: inherit;
+            border-radius: 0 0 3px 3px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .item:not(:last-child)::after {
+            opacity: 1;
+        }
+
+        /* Araç kategorileri için renkler */
+        .hareket { background: #4a6cd4; }
+        .kontrol { background: #e9a83a; }
+        .operator { background: #5cb712; }
+        .deger { background: #cc5b22; }
+
+        .dragging {
+            opacity: 0 !important;
+            height: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            border: none !important;
+        }
+
+        .placeholder {
+            border: 2px dashed #666;
+            border-radius: 3px;
+            margin: 5px 0;
+            height: 35px;
+            background: rgba(0, 0, 0, 0.05);
+            transition: all 0.2s ease;
+        }
+
+        /* Blok stilleri */
+        .block {
+            border: 2px solid #4a6cd4;
+            border-radius: 3px;
+            padding: 10px;
+            background: #edf1fd;
+            margin: 5px 0;
+            min-height: 50px;
+        }
+
+        .block.dongu {
+            border-color: #e9a83a;
+            background: #fff6e6;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="workspace">
+        <div class="toolbox">
+            <div class="category">
+                <div class="category-title">Bloklar</div>
+                <div class="item block-creator" data-type="block" style="background: #4a6cd4;">Blok</div>
+                <div class="item block-creator dongu" data-type="dongu" style="background: #e9a83a;">Döngü</div>
+            </div>
+            <div class="category">
+                <div class="category-title">Hareket</div>
+                <div class="item hareket" draggable="true">İleri Git</div>
+                <div class="item hareket" draggable="true">Sağa Dön</div>
+                <div class="item hareket" draggable="true">Zıpla</div>
+            </div>
+            <div class="category">
+                <div class="category-title">Kontrol</div>
+                <div class="item kontrol" draggable="true">Eğer ise</div>
+                <div class="item kontrol" draggable="true">Tekrarla</div>
+                <div class="item kontrol" draggable="true">Bekle</div>
+            </div>
+            <div class="category">
+                <div class="category-title">Operatörler</div>
+                <div class="item operator" draggable="true">Topla</div>
+                <div class="item operator" draggable="true">Çıkar</div>
+                <div class="item operator" draggable="true">Karşılaştır</div>
+            </div>
+            <div class="category">
+                <div class="category-title">Değerler</div>
+                <div class="item deger" draggable="true">Değişken</div>
+                <div class="item deger" draggable="true">Liste</div>
+                <div class="item deger" draggable="true">Metin</div>
+            </div>
+        </div>
+        <div class="coding-area"></div>
+        <div class="preview-area">
+            <div class="preview-area-title">Çalıştırma Ekranı</div>
+            <!-- Çalıştırma ekranı içeriği buraya gelecek -->
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            let draggedItem = null;
+            let draggedBox = null;
+            let placeholder = document.createElement('div');
+            placeholder.className = 'placeholder';
+            let isOutsideContainer = false;
+
+            const codingArea = document.querySelector('.coding-area');
+
+            function initializeItemDrag(item) {
+                // Toolbox'tan mı yoksa coding area'dan mı olduğunu kontrol et
+                const isToolboxItem = item.closest('.toolbox') !== null;
+
+                item.addEventListener('dragstart', (e) => {
+                    draggedItem = item;
+                    draggedBox = null;
+                    isOutsideContainer = false;
+                    setTimeout(() => item.classList.add('dragging'), 0);
+                    e.stopPropagation();
+                });
+
+                item.addEventListener('dragend', (e) => {
+                    // Eğer toolbox öğesiyse silme
+                    if (!isToolboxItem && isOutsideContainer && draggedItem) {
+                        draggedItem.remove();
+                    }
+                    draggedItem?.classList.remove('dragging');
+                    if (placeholder.parentNode) {
+                        placeholder.remove();
+                    }
+                    draggedItem = null;
+                    draggedBox = null;
+                    isOutsideContainer = false;
+                });
+            }
+
+            // Toolbox öğelerini başlat
+            document.querySelectorAll('.toolbox .item').forEach(item => {
+                item.draggable = true;
+                initializeItemDrag(item);
+            });
+
+            function createNewItem(sourceItem) {
+                if (!sourceItem) return null;
+                
+                if (sourceItem.classList.contains('block-creator')) {
+                    const type = sourceItem.dataset.type;
+                    const block = document.createElement('div');
+                    block.className = `block ${type}`;
+                    block.draggable = true;
+                    initializeBlockDrag(block);
+                    return block;
+                } else {
+                    const newItem = sourceItem.cloneNode(true);
+                    newItem.draggable = true;
+                    initializeItemDrag(newItem);
+                    return newItem;
+                }
+            }
+
+            function initializeBoxDrag(box) {
+                box.addEventListener('dragstart', (e) => {
+                    if (e.target === box) {
+                        draggedBox = box;
+                        draggedItem = box;
+                        isOutsideContainer = false;
+                        setTimeout(() => box.classList.add('dragging'), 0);
+                    }
+                });
+
+                box.addEventListener('dragend', () => {
+                    if (isOutsideContainer && draggedBox) {
+                        draggedBox.remove();
+                    }
+                    draggedBox?.classList.remove('dragging');
+                    if (placeholder.parentNode) {
+                        placeholder.remove();
+                    }
+                    draggedItem = null;
+                    draggedBox = null;
+                    isOutsideContainer = false;
+                });
+
+                box.addEventListener('dragover', handleDragOver);
+                box.addEventListener('drop', handleDrop);
+            }
+
+            function initializeBlockDrag(block) {
+                block.addEventListener('dragstart', (e) => {
+                    draggedItem = block;
+                    setTimeout(() => block.classList.add('dragging'), 0);
+                    e.stopPropagation();
+                });
+
+                block.addEventListener('dragend', () => {
+                    block.classList.remove('dragging');
+                    draggedItem = null;
+                });
+
+                block.addEventListener('dragover', handleDragOver);
+                block.addEventListener('drop', handleDrop);
+            }
+
+            // Body için event listener'lar
+            document.body.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                
+                // Coding area dışına çıkıldığında
+                if (!e.target.closest('.coding-area')) {
+                    isOutsideContainer = true;
+                    if (placeholder.parentNode) {
+                        placeholder.remove();
+                    }
+                }
+            });
+
+            // Coding area için event listener'lar
+            codingArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                
+                // Coding area içindeyken
+                isOutsideContainer = false;
+
+                if (!draggedItem) return;
+
+                const afterElement = getDragAfterElement(codingArea, e.clientY, '.item, .block');
+                
+                if (!e.target.closest('.block')) {  // Sadece coding area üzerindeyken
+                    if (placeholder.parentNode !== codingArea || 
+                        (afterElement && placeholder.nextSibling !== afterElement) ||
+                        (!afterElement && codingArea.lastChild !== placeholder)) {
+                        
+                        placeholder.remove();
+                        if (afterElement) {
+                            codingArea.insertBefore(placeholder, afterElement);
+                        } else {
+                            codingArea.appendChild(placeholder);
+                        }
+                    }
+                }
+            });
+
+            codingArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+
+                if (!draggedItem) return;
+                if (e.target.closest('.block')) return; // Blok içine düşürme işlemini block handler'a bırak
+
+                const newItem = createNewItem(draggedItem);
+                if (newItem && placeholder.parentNode) {
+                    placeholder.replaceWith(newItem);
+                }
+            });
+
+            function handleDragOver(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                if (!draggedItem) return;
+                isOutsideContainer = false;
+
+                const target = e.currentTarget;
+                if (draggedItem === target) return;
+                if (draggedItem.contains(target)) return;
+
+                const afterElement = getDragAfterElement(target, e.clientY, '.item, .box');
+                
+                if (placeholder.parentNode !== target || 
+                    (afterElement && placeholder.nextSibling !== afterElement) ||
+                    (!afterElement && target.lastChild !== placeholder)) {
+                    
+                    placeholder.remove();
+                    if (afterElement) {
+                        target.insertBefore(placeholder, afterElement);
+                    } else {
+                        target.appendChild(placeholder);
+                    }
+                }
+            }
+
+            function handleDrop(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                if (!draggedItem) return;
+
+                const target = e.currentTarget;
+                if (draggedItem === target) return;
+                if (draggedItem.contains(target)) return;
+
+                if (draggedBox) {
+                    draggedBox.classList.add('as-item');
+                }
+
+                placeholder.replaceWith(draggedItem);
+
+                // Yeni eklenen öğeleri tekrar başlat
+                if (draggedBox) {
+                    initializeDraggable(draggedBox);
+                    draggedBox.querySelectorAll('.item, .box').forEach(initializeDraggable);
+                }
+            }
+
+            function getDragAfterElement(container, y, selector) {
+                const elements = [...container.querySelectorAll(`${selector}:not(.dragging):not(.placeholder)`)];
+                
+                if (elements.length === 0) return null;
+
+                return elements.reduce((closest, element) => {
+                    const box = element.getBoundingClientRect();
+                    const offset = y - box.top;
+
+                    if (offset < box.height / 2 && offset > closest.offset) {
+                        return { offset: offset, element: element };
+                    } else {
+                        return closest;
+                    }
+                }, { offset: Number.NEGATIVE_INFINITY }).element;
+            }
+
+            // Başlangıçta tüm öğeleri başlat
+            document.querySelectorAll('.item, .box').forEach(initializeDraggable);
+
+            // Yeni öğeler eklendiğinde onları da başlat
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    mutation.addedNodes.forEach((node) => {
+                        if (node.classList && (node.classList.contains('item') || node.classList.contains('box'))) {
+                            initializeDraggable(node);
+                        }
+                    });
+                });
+            });
+
+            observer.observe(codingArea, {
+                childList: true,
+                subtree: true
+            });
+        });
+    </script>
+</body>
+
+</html>

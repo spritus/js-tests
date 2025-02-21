@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sürükle-Bırak Örneği</title>
+    <style>
+        .container {
+            display: flex;
+            flex-direction: column;
+            width: 300px;
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
+
+        .item {
+            padding: 10px;
+            margin: 5px 0;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            cursor: move;
+        }
+
+        .item.dragging {
+            opacity: 0.1;
+            background-color: bisque;
+        }
+
+        .item.placeholder {
+            background-color: bisque;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container" id="container">
+        <div class="item" draggable="true">Item 1</div>
+        <div class="item" draggable="true">Item 2</div>
+        <div class="item" draggable="true">Item 3</div>
+        <div class="item" draggable="true">Item 4</div>
+    </div>
+
+    <script>
+        class Sortable {
+            constructor(container) {
+                this.container = container;
+                this.items = Array.from(container.children);
+                this.draggingItem = null;
+
+                this.init();
+            }
+
+            init() {
+                this.items.forEach(item => {
+                    item.addEventListener('dragstart', this.handleDragStart.bind(this));
+                    item.addEventListener('dragover', this.handleDragOver.bind(this));
+                    item.addEventListener('drop', this.handleDrop.bind(this));
+                    item.addEventListener('dragend', this.handleDragEnd.bind(this));
+                });
+            }
+
+            handleDragStart(e) {
+                this.draggingItem = e.target;
+                e.target.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/html', e.target.innerHTML);
+            }
+
+            handleDragOver(e) {
+                e.preventDefault();
+                const target = e.target.closest('.item');
+                if (target && target !== this.draggingItem) {
+                    const rect = target.getBoundingClientRect();
+                    const next = (e.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
+                    this.container.insertBefore(this.draggingItem, next ? target.nextSibling : target);
+                }
+            }
+
+            handleDrop(e) {
+                e.preventDefault();
+                if (e.target.classList.contains('item')) {
+                    e.target.classList.remove('dragging');
+                }
+            }
+
+            handleDragEnd(e) {
+                e.target.classList.remove('dragging');
+                this.draggingItem = null;
+                console.log([...this.container.children].map(item => item.innerHTML));
+            }
+        }
+
+        // Uygulamayı başlat
+        document.addEventListener('DOMContentLoaded', () => {
+            const container = document.getElementById('container');
+            new Sortable(container);
+        });
+    </script>
+</body>
+
+</html>

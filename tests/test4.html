@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+
+    <script>
+        const items = {
+            apple: 5,
+            orange: 3,
+            banana: 2
+        };
+
+        const sortingHandler = {
+            ownKeys: function (obj) {
+                return Object.keys(obj).sort((a, b) => obj[a] - obj[b]);
+            }
+        };
+
+        const sortedItemsProxy = new Proxy(items, sortingHandler);
+        console.log(sortedItemsProxy); // sortedItemsProxy
+
+    </script>
+</body>
+
+</html>
