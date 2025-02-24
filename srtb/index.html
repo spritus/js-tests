@@ -13,6 +13,21 @@
             font-family: Arial, sans-serif;
         }
 
+        div::-webkit-scrollbar {
+            width: 10px;
+        }
+        
+        div::-webkit-scrollbar-track {
+            border-radius: 8px;
+            background-color: #e7e7e7;
+            border: 1px solid #cacaca;
+        }
+        
+        div::-webkit-scrollbar-thumb {
+            border-radius: 8px;
+            background-color: #ccc;
+        }
+
         .workspace {
             display: flex;
             gap: 20px;
@@ -25,7 +40,8 @@
             background: white;
             border-radius: 5px;
             padding: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            overflow-y: auto;
         }
 
         .category {
@@ -45,8 +61,9 @@
             background: white;
             border-radius: 5px;
             padding: 20px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             min-height: 300px;
+            overflow: auto;
         }
 
         .preview-area {
@@ -54,7 +71,7 @@
             background: white;
             border-radius: 5px;
             padding: 20px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
 
         .preview-area-title {
@@ -69,18 +86,19 @@
             margin: 5px 0;
             color: white;
             border: none;
-            border-radius: 3px;
+            border-radius: 10px;
             cursor: move;
             position: relative;
         }
 
-        .item::after {
+        /* Sadece kodlama alanındaki itemler için çentik göster */
+        .coding-area .item::after {
             content: '';
             position: absolute;
             bottom: -5px;
             left: 50%;
             transform: translateX(-50%);
-            width: 10px;
+            width: 20px;
             height: 5px;
             background: inherit;
             border-radius: 0 0 3px 3px;
@@ -88,15 +106,26 @@
             transition: opacity 0.2s;
         }
 
-        .item:not(:last-child)::after {
+        .coding-area .item:not(:last-child)::after {
             opacity: 1;
         }
 
         /* Araç kategorileri için renkler */
-        .hareket { background: #4a6cd4; }
-        .kontrol { background: #e9a83a; }
-        .operator { background: #5cb712; }
-        .deger { background: #cc5b22; }
+        .hareket {
+            background: #4a6cd4;
+        }
+
+        .kontrol {
+            background: #e9a83a;
+        }
+
+        .operator {
+            background: #5cb712;
+        }
+
+        .deger {
+            background: #cc5b22;
+        }
 
         .dragging {
             opacity: 0 !important;
@@ -118,16 +147,40 @@
         /* Blok stilleri */
         .block {
             border: 2px solid #4a6cd4;
-            border-radius: 3px;
+            border-radius: 10px;
             padding: 10px;
             background: #edf1fd;
             margin: 5px 0;
             min-height: 50px;
+            position: relative;
         }
 
         .block.dongu {
             border-color: #e9a83a;
             background: #fff6e6;
+        }
+
+        /* Blok ve döngüler için çentik */
+        .block::after {
+            content: '';
+            position: absolute;
+            bottom: -7px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 7px;
+            background: #4a6cd4;
+            border-radius: 0 0 3px 3px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .block.dongu::after {
+            background: #e9a83a;
+        }
+
+        .block:not(:last-child)::after {
+            opacity: 1;
         }
     </style>
 </head>
@@ -137,7 +190,7 @@
         <div class="toolbox">
             <div class="category">
                 <div class="category-title">Bloklar</div>
-                <div class="item block-creator" data-type="block" style="background: #4a6cd4;">Blok</div>
+                <div class="item block-creator" data-type="block" style="background: #4a6cd4;">Eğer</div>
                 <div class="item block-creator dongu" data-type="dongu" style="background: #e9a83a;">Döngü</div>
             </div>
             <div class="category">
@@ -183,21 +236,42 @@
             const codingArea = document.querySelector('.coding-area');
 
             function initializeItemDrag(item) {
-                // Toolbox'tan mı yoksa coding area'dan mı olduğunu kontrol et
                 const isToolboxItem = item.closest('.toolbox') !== null;
 
                 item.addEventListener('dragstart', (e) => {
-                    draggedItem = item;
+                    if (isToolboxItem) {
+                        // Toolbox'tan sürükleme başladığında kopya oluştur
+                        if (item.classList.contains('block-creator')) {
+                            // Blok ve döngü için özel kopya oluştur
+                            const type = item.dataset.type;
+                            const block = document.createElement('div');
+                            block.className = `block ${type}`;
+                            block.draggable = true;
+                            initializeBlockDrag(block);
+                            draggedItem = block;
+                        } else {
+                            // Normal araçlar için kopya oluştur
+                            const clone = item.cloneNode(true);
+                            clone.draggable = true;
+                            initializeItemDrag(clone);
+                            draggedItem = clone;
+                        }
+                        // Orijinal öğe görünür kalır
+                        item.style.opacity = '1';
+                    } else {
+                        draggedItem = item;
+                    }
+
+                    setTimeout(() => draggedItem.classList.add('dragging'), 0);
                     draggedBox = null;
                     isOutsideContainer = false;
-                    setTimeout(() => item.classList.add('dragging'), 0);
                     e.stopPropagation();
                 });
 
                 item.addEventListener('dragend', (e) => {
-                    // Eğer toolbox öğesiyse silme
-                    if (!isToolboxItem && isOutsideContainer && draggedItem) {
-                        draggedItem.remove();
+                    // Kodlama alanı dışına taşındıysa ve toolbox'tan değilse sil
+                    if (isOutsideContainer && !isToolboxItem) {
+                        item.remove();
                     }
                     draggedItem?.classList.remove('dragging');
                     if (placeholder.parentNode) {
@@ -217,7 +291,7 @@
 
             function createNewItem(sourceItem) {
                 if (!sourceItem) return null;
-                
+
                 if (sourceItem.classList.contains('block-creator')) {
                     const type = sourceItem.dataset.type;
                     const block = document.createElement('div');
@@ -244,8 +318,9 @@
                 });
 
                 box.addEventListener('dragend', () => {
-                    if (isOutsideContainer && draggedBox) {
-                        draggedBox.remove();
+                    // Kodlama alanı dışına taşındıysa sil
+                    if (isOutsideContainer) {
+                        box.remove();
                     }
                     draggedBox?.classList.remove('dragging');
                     if (placeholder.parentNode) {
@@ -268,6 +343,10 @@
                 });
 
                 block.addEventListener('dragend', () => {
+                    // Kodlama alanı dışına taşındıysa sil
+                    if (isOutsideContainer) {
+                        block.remove();
+                    }
                     block.classList.remove('dragging');
                     draggedItem = null;
                 });
@@ -279,7 +358,7 @@
             // Body için event listener'lar
             document.body.addEventListener('dragover', (e) => {
                 e.preventDefault();
-                
+
                 // Coding area dışına çıkıldığında
                 if (!e.target.closest('.coding-area')) {
                     isOutsideContainer = true;
@@ -292,19 +371,16 @@
             // Coding area için event listener'lar
             codingArea.addEventListener('dragover', (e) => {
                 e.preventDefault();
-                
-                // Coding area içindeyken
                 isOutsideContainer = false;
 
                 if (!draggedItem) return;
 
                 const afterElement = getDragAfterElement(codingArea, e.clientY, '.item, .block');
-                
-                if (!e.target.closest('.block')) {  // Sadece coding area üzerindeyken
-                    if (placeholder.parentNode !== codingArea || 
+                if (!e.target.closest('.block')) {
+                    if (placeholder.parentNode !== codingArea ||
                         (afterElement && placeholder.nextSibling !== afterElement) ||
                         (!afterElement && codingArea.lastChild !== placeholder)) {
-                        
+
                         placeholder.remove();
                         if (afterElement) {
                             codingArea.insertBefore(placeholder, afterElement);
@@ -320,18 +396,28 @@
                 e.stopPropagation();
 
                 if (!draggedItem) return;
-                if (e.target.closest('.block')) return; // Blok içine düşürme işlemini block handler'a bırak
+                if (e.target.closest('.block')) return;
 
-                const newItem = createNewItem(draggedItem);
-                if (newItem && placeholder.parentNode) {
-                    placeholder.replaceWith(newItem);
+                const isFromToolbox = draggedItem.closest('.toolbox') !== null;
+                if (isFromToolbox) {
+                    // Toolbox'tan gelen öğeler için kopya oluştur
+                    const newItem = createNewItem(draggedItem);
+                    if (newItem && placeholder.parentNode) {
+                        placeholder.replaceWith(newItem);
+                        draggedItem.classList.remove('dragging');
+                    }
+                } else {
+                    // Kodlama alanı içindeki öğeler için normal taşıma
+                    if (placeholder.parentNode) {
+                        placeholder.replaceWith(draggedItem);
+                    }
                 }
             });
 
             function handleDragOver(e) {
                 e.preventDefault();
                 e.stopPropagation();
-                
+
                 if (!draggedItem) return;
                 isOutsideContainer = false;
 
@@ -340,11 +426,11 @@
                 if (draggedItem.contains(target)) return;
 
                 const afterElement = getDragAfterElement(target, e.clientY, '.item, .box');
-                
-                if (placeholder.parentNode !== target || 
+
+                if (placeholder.parentNode !== target ||
                     (afterElement && placeholder.nextSibling !== afterElement) ||
                     (!afterElement && target.lastChild !== placeholder)) {
-                    
+
                     placeholder.remove();
                     if (afterElement) {
                         target.insertBefore(placeholder, afterElement);
@@ -379,7 +465,7 @@
 
             function getDragAfterElement(container, y, selector) {
                 const elements = [...container.querySelectorAll(`${selector}:not(.dragging):not(.placeholder)`)];
-                
+
                 if (elements.length === 0) return null;
 
                 return elements.reduce((closest, element) => {
