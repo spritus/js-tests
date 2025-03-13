@@ -1,143 +1,139 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Bağımsız Trafik Işıkları</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #333;
+        }
+
+        .traffic-light-container {
+            display: flex;
+            gap: 20px;
+        }
+
+        .traffic-light {
+            display: flex;
+            flex-direction: column;
+            width: 60px;
+            height: 180px;
+            background-color: #222;
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        .light {
+            width: 40px;
+            height: 40px;
+            margin: 10px auto;
+            border-radius: 50%;
+            background-color: #555;
+            opacity: 0.3;
+        }
+
+        .red.active {
+            background-color: red;
+            opacity: 1;
+        }
+
+        .yellow.active {
+            background-color: yellow;
+            opacity: 1;
+        }
+
+        .green.active {
+            background-color: green;
+            opacity: 1;
+        }
+    </style>
 </head>
-<style>
-    body {
-        background-color: gray;
-        background-color: ;
-    }
-
-    .lamba {
-        width: 28px;
-        height: 28px;
-        border-radius: 50%;
-        border: solid 1px;
-        margin-bottom: 3px;
-    }
-
-    .trafik-lambasi {
-        position: absolute;
-        background-color: slategray;
-        border-radius: 5px;
-        border: solid 1px;
-        padding: 3px;
-        width: 30px;
-        height: 96px;
-    }
-</style>
 
 <body>
+    <div class="traffic-light-container" id="traffic-light-container"></div>
 
+    <script>
+        class TrafficLight {
+            constructor(containerId, redDuration, yellowDuration, greenDuration, initialLight = 'red') {
+                // HTML öğelerini oluştur
+                this.trafficLight = document.createElement('div');
+                this.trafficLight.classList.add('traffic-light');
+
+                this.redLight = document.createElement('div');
+                this.redLight.classList.add('light', 'red');
+
+                this.yellowLight = document.createElement('div');
+                this.yellowLight.classList.add('light', 'yellow');
+
+                this.greenLight = document.createElement('div');
+                this.greenLight.classList.add('light', 'green');
+
+                this.trafficLight.append(this.redLight, this.yellowLight, this.greenLight);
+                document.getElementById(containerId).appendChild(this.trafficLight);
+
+                // Durum süreleri ve başlangıç ışığı
+                this.redDuration = redDuration;
+                this.yellowDuration = yellowDuration;
+                this.greenDuration = greenDuration;
+                this.currentLight = this.getLightIndex(initialLight);
+
+                this.start();
+            }
+
+            getLightIndex(lightColor) {
+                switch (lightColor) {
+                    case 'red': return 0;
+                    case 'yellow': return 1;
+                    case 'green': return 2;
+                    default: return 0;
+                }
+            }
+
+            async start() {
+                while (true) {
+                    await this.changeLight();
+                }
+            }
+
+            delay(duration) {
+                return new Promise(resolve => setTimeout(resolve, duration));
+            }
+
+            async changeLight() {
+                // Tüm ışıkları kapat
+                this.redLight.classList.remove('active');
+                this.yellowLight.classList.remove('active');
+                this.greenLight.classList.remove('active');
+
+                // Geçerli ışığı aç ve süreyi bekle
+                if (this.currentLight === 0) {
+                    this.redLight.classList.add('active');
+                    await this.delay(this.redDuration);
+                } else if (this.currentLight === 1) {
+                    this.yellowLight.classList.add('active');
+                    await this.delay(this.yellowDuration);
+                } else if (this.currentLight === 2) {
+                    this.greenLight.classList.add('active');
+                    await this.delay(this.greenDuration);
+                }
+
+                // Bir sonraki ışığa geç
+                this.currentLight = (this.currentLight + 1) % 3;
+            }
+        }
+
+        // Her bir trafik ışığını bağımsız çalışacak şekilde başlatıyoruz
+        new TrafficLight("traffic-light-container", 1000, 100, 1000, 'red');    // İlk lamba kırmızı ile başlar
+        new TrafficLight("traffic-light-container", 1000, 100, 1000, 'yellow'); // İkinci lamba sarı ile başlar
+        new TrafficLight("traffic-light-container", 1000, 100, 1000, 'green');  // Üçüncü lamba yeşil ile başlar
+    </script>
 </body>
-<script>
-    /*    class TrafikLambasi {
-            constructor(kirmiziSure, sariSure, yesilSure) {
-                this.kirmiziSure = kirmiziSure;
-                this.sariSure = sariSure;
-                this.yesilSure = yesilSure;
-                this.durum = "kirmizi";
-                this.intervalId = null;
-            }
-    
-            baslat() {
-                if (this.intervalId) {
-                    clearInterval(this.intervalId);
-                }
-                this.intervalId = setInterval(() => {
-                    switch (this.durum) {
-                        case "kirmizi":
-                            this.kirmiziIsık();
-                            break;
-                        case "sari":
-                            this.sariIsık();
-                            break;
-                        case "yesil":
-                            this.yesilIsık();
-                            break;
-                    }
-                }, 1000);
-            }
-    
-            kirmiziIsık() {
-                console.log("Kırmızı ışık yanıyor!");
-                this.durum = "sari";
-                setTimeout(() => {
-                    this.sariIsık();
-                }, this.kirmiziSure * 1000);
-            }
-    
-            sariIsık() {
-                console.log("Sarı ışık yanıyor!");
-                this.durum = "yesil";
-                setTimeout(() => {
-                    this.yesilIsık();
-                }, this.sariSure * 1000);
-            }
-    
-            yesilIsık() {
-                console.log("Yeşil ışık yanıyor!");
-                this.durum = "kirmizi";
-                setTimeout(() => {
-                    this.kirmiziIsık();
-                }, this.yesilSure * 1000);
-            }
-    
-            durdur() {
-                clearInterval(this.intervalId);
-            }
-        }
-    
-        // Örnek kullanım
-        const trafikLambasi = new TrafikLambasi(5, 2, 3);
-        trafikLambasi.baslat();*/
-
-    class TrafikLambasi {
-        constructor(x, y, ksure, ysure) {
-            this.durum = 0;
-            this.body = document.createElement("div");
-            this.body.className = "trafik-lambasi";
-            this.body.style.left = x + "px";
-            this.body.style.top = y + "px";
-            document.body.append(this.body);
-
-            this.kirmizi = document.createElement("div");
-            this.kirmizi.className = "lamba";
-            this.body.append(this.kirmizi);
-
-            this.sari = document.createElement("div");
-            this.sari.className = "lamba";
-            this.body.append(this.sari);
-
-            this.yesil = document.createElement("div");
-            this.yesil.className = "lamba";
-            this.body.append(this.yesil);
-
-            this.t = 0;
-            setInterval(() => {
-                if (this.durum == 0) {
-                    this.kirmizi.style.backgroundColor = "red";
-                    this.yesil.style.backgroundColor = "transparent";
-                }
-                else if (this.durum == 1) {
-                    this.kirmizi.style.backgroundColor = "transparent";
-                    this.yesil.style.backgroundColor = "lime";
-                }
-                if (this.durum == 0 && this.t % ksure == 0) this.durum = 1;
-                if (this.durum == 1 && this.t % ysure == 0) this.durum = 0;
-
-                this.t++;
-            }, 1000);
-        }
-    }
-
-    let trafikLambasiGuney = new TrafikLambasi(500, 500, 5, 3);
-    //let trafikLambasiBati = new TrafikLambasi(200, 200);
-
-</script>
 
 </html>
