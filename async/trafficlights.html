@@ -66,30 +66,29 @@
             }
 
             start() {
-                const that = this;
-                async function main() {
-                    while (that.go) {
-                        if (!that.reverse) {
-                            that.green.off();
-                            that.red.on();
-                            await delay(that.rdelay);
-                            that.yellow.on();
-                            await delay(that.ydelay);
-                            that.red.off();
-                            that.yellow.off();
-                            that.green.on();
-                            await delay(that.gdelay);
+                const main = async () => {
+                    while (this.go) {
+                        if (!this.reverse) {
+                            this.green.off();
+                            this.red.on();
+                            await delay(this.rdelay);
+                            this.yellow.on();
+                            await delay(this.ydelay);
+                            this.red.off();
+                            this.yellow.off();
+                            this.green.on();
+                            await delay(this.gdelay);
                         }
                         else {
-                            that.red.off();
-                            that.yellow.off();
-                            that.green.on();
-                            await delay(that.gdelay);
-                            that.green.off();
-                            that.red.on();
-                            await delay(that.rdelay);
-                            that.yellow.on();
-                            await delay(that.ydelay);
+                            this.red.off();
+                            this.yellow.off();
+                            this.green.on();
+                            await delay(this.gdelay);
+                            this.green.off();
+                            this.red.on();
+                            await delay(this.rdelay);
+                            this.yellow.on();
+                            await delay(this.ydelay);
                         }
                     }
                 }
