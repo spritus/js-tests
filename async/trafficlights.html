@@ -32,7 +32,7 @@
 
 <body>
     <script>
-        class Ligth {
+        class Light {
             constructor(color, parent) {
                 this.color = color;
                 this.body = document.createElement("div");
@@ -60,9 +60,9 @@
                 this.body.classList.add("trafficlight");
                 document.body.appendChild(this.body);
 
-                this.red = new Ligth("red", this.body);
-                this.yellow = new Ligth("yellow", this.body);
-                this.green = new Ligth("lightgreen", this.body);
+                this.red = new Light("red", this.body);
+                this.yellow = new Light("yellow", this.body);
+                this.green = new Light("lightgreen", this.body);
             }
 
             start() {

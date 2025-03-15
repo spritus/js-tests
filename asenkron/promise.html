@@ -10,15 +10,21 @@
 <body>
     <script>
         function delay(w) {
-            return new Promise((resolve) => {
-                setTimeout(() => { resolve() }, w)
+            return new Promise((resolve, reject) => {
+                setTimeout(() => {
+                    resolve()
+                }, w)
             })
         }
 
         /* Senkron kullanımı */
-        delay(1000).then(() => {
-            document.write("1 saniye gecildi<br>")
+        delay(3000).then(() => {
+            document.write("Merhaba<br>")
+            delay(1000).then(() => {
+                document.write("Güle güle<br>")
+            })
         })
+
 
         /* Asenkron kullanımı */
         async function trafficLights() {
@@ -30,7 +36,17 @@
             document.write("Yeşil<br>")
         }
 
+        async function hede() {
+            await delay(1000)
+            document.write("Hede<br>")
+            await delay(1000)
+            document.write("Hodo<br>")
+            await delay(1000)
+            document.write("Büdü<br>")
+        }
+
         trafficLights()
+        hede()
     </script>
 </body>
 
