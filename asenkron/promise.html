@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <script>
+        function delay(w) {
+            return new Promise((resolve) => {
+                setTimeout(() => { resolve() }, w)
+            })
+        }
+
+        /* Senkron kullanımı */
+        delay(1000).then(() => {
+            document.write("1 saniye gecildi<br>")
+        })
+
+        /* Asenkron kullanımı */
+        async function trafficLights() {
+            await delay(2000)
+            document.write("Kırmızı<br>")
+            await delay(3000)
+            document.write("Sarı<br>")
+            await delay(1000)
+            document.write("Yeşil<br>")
+        }
+
+        trafficLights()
+    </script>
+</body>
+
+</html>

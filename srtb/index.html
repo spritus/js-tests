@@ -16,13 +16,13 @@
         div::-webkit-scrollbar {
             width: 10px;
         }
-        
+
         div::-webkit-scrollbar-track {
             border-radius: 8px;
             background-color: #e7e7e7;
             border: 1px solid #cacaca;
         }
-        
+
         div::-webkit-scrollbar-thumb {
             border-radius: 8px;
             background-color: #ccc;
@@ -265,6 +265,10 @@
                         draggedItem = item;
                     }
 
+                    draggedItem.style.zIndex = '9999';
+                    draggedItem.style.pointerEvents = 'none'; // Ekstra kopya sorunu çözümü
+                    draggedItem.style.opacity = '0.8';
+
                     setTimeout(() => draggedItem.classList.add('dragging'), 0);
                     draggedBox = null;
                     isOutsideContainer = false;
@@ -273,6 +277,7 @@
 
                 item.addEventListener('dragend', (e) => {
                     // Kodlama alanı dışına taşındıysa ve toolbox'tan değilse sil
+
                     if (isOutsideContainer && !isToolboxItem) {
                         item.remove();
                     }
@@ -280,6 +285,9 @@
                     if (placeholder.parentNode) {
                         placeholder.remove();
                     }
+                    draggedItem.style.zIndex = '';
+                    draggedItem.style.pointerEvents = 'auto';
+                    draggedItem.style.opacity = '1';
                     draggedItem = null;
                     draggedBox = null;
                     isOutsideContainer = false;
@@ -312,6 +320,8 @@
 
             function initializeBoxDrag(box) {
                 box.addEventListener('dragstart', (e) => {
+                    box.style.zIndex = "2";
+                    console.log("X")
                     if (e.target === box) {
                         draggedBox = box;
                         draggedItem = box;
@@ -322,6 +332,7 @@
 
                 box.addEventListener('dragend', () => {
                     // Kodlama alanı dışına taşındıysa sil
+                    box.style.zIndex = "auto";
                     if (isOutsideContainer) {
                         box.remove();
                     }
@@ -481,6 +492,14 @@
                         return closest;
                     }
                 }, { offset: Number.NEGATIVE_INFINITY }).element;
+            }
+
+            function initializeDraggable(element) {
+                if (element.classList.contains('item')) {
+                    initializeItemDrag(element);
+                } else if (element.classList.contains('box')) {
+                    initializeBoxDrag(element);
+                }
             }
 
             // Başlangıçta tüm öğeleri başlat
