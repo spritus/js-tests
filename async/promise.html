@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+
+    <script>
+        function fetchData() {
+            return new Promise((resolve, reject) => {
+                setTimeout(() => {
+                    const success = Math.random() > 0.5; // %50 şans
+                    if (success) {
+                        resolve("Veri başarıyla alındı! ✅<br>");
+                    } else {
+                        reject("Veri alınamadı! ❌<br>");
+                    }
+                }, 2000);
+            });
+        }
+
+        // Promise'in kullanımı
+        fetchData()
+            .then((data) => document.write(data))     // Başarılı olursa burası çalışır
+            .catch((error) => document.write(error)) // Hatalı olursa burası çalışır
+            .finally(() => document.write("İşlem tamamlandı! 🔄<br><br>"));
+
+        function delay(w) {
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    resolve(true)
+                }, w)
+            })
+        }
+
+        async function getData() {
+            try {
+                const result = await fetchData();  // fetchData() fonksiyonunu bekler
+                document.write(result);               // Başarılıysa bu çalışır
+                await delay(2000)
+                document.write("Hede<br>")
+                await delay(1000)
+                document.write("Hodo<br>")
+                await delay(1000)
+                document.write("Büdü<br>")
+
+            } catch (error) {
+                document.write(error);              // Hata olursa burası çalışır
+            } finally {
+                document.write("İşlem tamamlandı! 🔄");
+            }
+        }
+
+        getData();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body {
+            background-color: darkgray;
+        }
+
+        .trafficlight {
+            width: 30px;
+            height: 87px;
+            background: #777;
+            border: 2px solid black;
+            margin: 2px;
+            border-radius: 5px;
+            display: inline-block;
+        }
+
+        .light {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: #999;
+            margin: 2px;
+        }
+    </style>
+</head>
+
+<body>
+    <script>
+        class Ligth {
+            constructor(color, parent) {
+                this.color = color;
+                this.body = document.createElement("div");
+                this.body.classList.add("light");
+                parent.appendChild(this.body);
+            }
+
+            on() {
+                this.body.style.backgroundColor = this.color;
+            }
+
+            off() {
+                this.body.style.backgroundColor = "#999";
+            }
+        }
+
+        class TrafficLight {
+            constructor(rdelay, ydelay, gdelay, reverse = false) {
+                this.rdelay = rdelay;
+                this.ydelay = ydelay;
+                this.gdelay = gdelay;
+                this.reverse = reverse;
+                this.go = true;
+                this.body = document.createElement("div");
+                this.body.classList.add("trafficlight");
+                document.body.appendChild(this.body);
+
+                this.red = new Ligth("red", this.body);
+                this.yellow = new Ligth("yellow", this.body);
+                this.green = new Ligth("lightgreen", this.body);
+            }
+
+            start() {
+                const that = this;
+                async function main() {
+                    while (that.go) {
+                        if (!that.reverse) {
+                            that.green.off();
+                            that.red.on();
+                            await delay(that.rdelay);
+                            that.yellow.on();
+                            await delay(that.ydelay);
+                            that.red.off();
+                            that.yellow.off();
+                            that.green.on();
+                            await delay(that.gdelay);
+                        }
+                        else {
+                            that.red.off();
+                            that.yellow.off();
+                            that.green.on();
+                            await delay(that.gdelay);
+                            that.green.off();
+                            that.red.on();
+                            await delay(that.rdelay);
+                            that.yellow.on();
+                            await delay(that.ydelay);
+                        }
+                    }
+                }
+
+                main();
+
+                function delay(ms) {
+                    return new Promise((resolve) => {
+                        setTimeout(() => {
+                            resolve(true)
+                        }, ms)
+                    })
+                }
+            }
+
+            stop() {
+                this.go = false;
+                setTimeout(() => {
+                    this.red.off();
+                    this.yellow.off();
+                    this.green.off();
+                }, 100)
+            }
+        }
+
+        const tl1 = new TrafficLight(3000, 500, 3000);
+        const tl2 = new TrafficLight(3000, 500, 3000, true);
+        const tl3 = new TrafficLight(700, 200, 1500);
+        const tl4 = new TrafficLight(100, 100, 100);
+        tl1.start();
+        tl2.start();
+        tl3.start();
+        tl4.start();
+
+        setTimeout(() => {
+            tl4.stop();
+        }, 7000);
+    </script>
+</body>
+
+</html>
